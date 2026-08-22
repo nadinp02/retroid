@@ -28,7 +28,7 @@ import {
   bulkUpdateProductsAction,
 } from "@/actions/products/actions";
 import { formatPrice } from "@/utils/price";
-import type { ProductWithRelations, Category, Brand } from "@/types/catalog";
+import type { ProductListItem, Category, Brand } from "@/types/catalog";
 
 const NO_CHANGE = "__no_change__";
 const NO_BRAND = "__no_brand__";
@@ -36,7 +36,7 @@ const NO_BRAND = "__no_brand__";
 // Client Components no pueden recibir el Decimal de Prisma como prop (no es
 // serializable a través del límite server/client) — la página lo convierte
 // a string antes de pasarlo.
-export type ProductRow = Omit<ProductWithRelations, "price"> & { price: string };
+export type ProductRow = Omit<ProductListItem, "price"> & { price: string };
 
 export function ProductTable({
   products,

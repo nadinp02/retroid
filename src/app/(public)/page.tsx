@@ -11,6 +11,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { GlitchText } from "@/components/glitch-text";
 import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
+import { organizationJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
 
 // Sin searchParams/params, Next.js pre-renderizaría esta página como
 // estática en build time. Forzamos render dinámico para que siempre
@@ -18,11 +19,40 @@ import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
 // desde el backoffice), sin depender de revalidatePath en cada acción.
 export const dynamic = "force-dynamic";
 
+const HOME_TITLE = "RETROID | Consolas Retro, Nintendo DS y 3DS Argentina";
+const HOME_DESCRIPTION =
+  "Compra y venta de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Envíos a todo Argentina.";
+
 export async function generateMetadata(): Promise<Metadata> {
+  // openGraph/twitter no se heredan en profundidad del layout raíz: si esta
+  // página define los suyos, tiene que repetir la imagen o la pierde.
+  const ogImage = {
+    url: "/banner.png",
+    width: 1279,
+    height: 929,
+    alt: "RETROID — consolas retro Nintendo DS y 3DS",
+  };
+
   return {
-    title: "Inicio",
-    description:
-      "Consolas retro importadas: Nintendo DS, 3DS, accesorios y productos seleccionados para coleccionistas.",
+    // title.absolute: esta es la página más importante a rankear — usa el
+    // mismo copy que el default del layout raíz, pero sin pasar por el
+    // template "%s | RETROID" (si no, quedaría duplicado "... | RETROID | RETROID").
+    title: { absolute: HOME_TITLE },
+    description: HOME_DESCRIPTION,
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      url: "/",
+      title: HOME_TITLE,
+      description: HOME_DESCRIPTION,
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: HOME_TITLE,
+      description: HOME_DESCRIPTION,
+      images: [ogImage.url],
+    },
   };
 }
 
@@ -43,6 +73,10 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-24 sm:space-y-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScriptProps(organizationJsonLd())}
+      />
       {/* Hero: portada de software, no landing genérica */}
       <section className="grid items-center gap-10 py-8 sm:py-12 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col items-start gap-6 text-left">

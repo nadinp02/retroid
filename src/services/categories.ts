@@ -1,9 +1,16 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Category } from "@/types/catalog";
 
-export function listCategories(filters: { isActive?: boolean } = {}) {
-  return prisma.category.findMany({ where: filters, orderBy: { name: "asc" } });
-}
+// Se lee en casi todas las páginas (home, catálogo, formularios admin) y
+// cambia solo cuando un admin la edita — cachear evita pegarle a Neon en
+// cada request. Invalidado con revalidateTag("categories") en actions.ts.
+export const listCategories = unstable_cache(
+  (filters: { isActive?: boolean } = {}) =>
+    prisma.category.findMany({ where: filters, orderBy: { name: "asc" } }),
+  ["categories-list"],
+  { tags: ["categories"] },
+);
 
 export function countCategories() {
   return prisma.category.count();

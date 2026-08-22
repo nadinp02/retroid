@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { listPublicProducts } from "@/services/products";
-import { listCategories } from "@/services/categories";
-import { listBrands } from "@/services/brands";
+import { listCategories, getCategoryBySlug } from "@/services/categories";
+import { listBrands, getBrandBySlug } from "@/services/brands";
 import { ProductGrid } from "@/features/products/product-grid";
 import { ProductFilters } from "@/features/products/product-filters";
 import { Pagination } from "@/components/pagination";
@@ -16,6 +16,73 @@ type ProductosSearchParams = {
   page?: string;
 };
 
+const DEFAULT_CATALOG_META = {
+  title: "Catálogo de Consolas Retro, Nintendo DS y 3DS",
+  description:
+    "Catálogo completo de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Compra y venta en Argentina, envíos a todo el país.",
+};
+
+// Copys curados para las categorías/marcas conocidas de RETROID (coinciden
+// con los términos de búsqueda objetivo). Cualquier categoría/marca nueva
+// que no esté acá cae al fallback genérico armado con el nombre real.
+const CATEGORY_SEO: Record<string, { title: string; description: string }> = {
+  consolas: {
+    title: "Consolas Retro",
+    description:
+      "Consolas retro Nintendo DS y Nintendo 3DS en Argentina, reacondicionadas y testeadas. Envíos a todo el país.",
+  },
+  cartuchos: {
+    title: "Cartuchos Nintendo DS",
+    description:
+      "Cartuchos originales y flashcarts (R4 DS) para Nintendo DS y 3DS. Envíos a todo Argentina.",
+  },
+  accesorios: {
+    title: "Accesorios Nintendo",
+    description:
+      "Accesorios para Nintendo DS y 3DS: cargadores, stylus y más. Envíos a todo Argentina.",
+  },
+  estuches: {
+    title: "Estuches Nintendo 3DS",
+    description: "Estuches y fundas de viaje para Nintendo DS y 3DS. Envíos a todo Argentina.",
+  },
+};
+
+const BRAND_SEO: Record<string, { title: string; description: string }> = {
+  nintendo: {
+    title: "Productos Nintendo",
+    description:
+      "Consolas, cartuchos y accesorios Nintendo DS y 3DS en Argentina. Envíos a todo el país.",
+  },
+};
+
+async function resolveCategoryMeta(slug: string) {
+  const known = CATEGORY_SEO[slug];
+  if (known) return known;
+  const category = await getCategoryBySlug(slug);
+  const name = category?.name ?? slug;
+  return { title: name, description: `${name} — catálogo RETROID. Envíos a todo Argentina.` };
+}
+
+async function resolveBrandMeta(slug: string) {
+  const known = BRAND_SEO[slug];
+  if (known) return known;
+  const brand = await getBrandBySlug(slug);
+  const name = brand?.name ?? slug;
+  return { title: name, description: `${name} — catálogo RETROID. Envíos a todo Argentina.` };
+}
+
+// Colapsa la variante "canónica" de /productos: mantiene los filtros de
+// taxonomía real (categoria/marca, indexables y con valor SEO propio) pero
+// descarta búsqueda libre y paginación, que no deben generar URLs indexadas
+// aparte (evita contenido duplicado).
+function buildCanonicalPath(params: { categoria?: string; marca?: string }) {
+  const usp = new URLSearchParams();
+  if (params.categoria) usp.set("categoria", params.categoria);
+  if (params.marca) usp.set("marca", params.marca);
+  const qs = usp.toString();
+  return `/productos${qs ? `?${qs}` : ""}`;
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -23,14 +90,42 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { categoria, marca, q } = await searchParams;
 
-  const parts: string[] = [];
-  if (categoria) parts.push(`categoría: ${categoria}`);
-  if (marca) parts.push(`marca: ${marca}`);
-  if (q) parts.push(`búsqueda: "${q}"`);
+  const meta = q
+    ? {
+        title: `Resultados para "${q}"`,
+        description: `Resultados de búsqueda para "${q}" en el catálogo de RETROID: consolas retro, Nintendo DS y 3DS en Argentina.`,
+      }
+    : categoria
+      ? await resolveCategoryMeta(categoria)
+      : marca
+        ? await resolveBrandMeta(marca)
+        : DEFAULT_CATALOG_META;
+
+  const canonicalPath = buildCanonicalPath({ categoria, marca });
+  const ogImage = {
+    url: "/banner.png",
+    width: 1279,
+    height: 929,
+    alt: "RETROID — catálogo de consolas retro",
+  };
 
   return {
-    title: parts.length > 0 ? `Productos (${parts.join(", ")})` : "Productos",
-    description: "Catálogo completo de productos disponibles.",
+    title: meta.title,
+    description: meta.description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      type: "website",
+      url: canonicalPath,
+      title: meta.title,
+      description: meta.description,
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      images: [ogImage.url],
+    },
   };
 }
 

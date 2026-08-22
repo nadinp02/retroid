@@ -56,3 +56,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+// El middleware ya protege /administracion/:path* por pathname, y las
+// Server Actions viajan como POST a ese mismo pathname — pero esa protección
+// es indirecta. Esto agrega una verificación explícita, en el propio archivo
+// de la action, para no depender exclusivamente de dónde se invoque desde.
+export async function requireSession() {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("No autorizado");
+  }
+  return session;
+}

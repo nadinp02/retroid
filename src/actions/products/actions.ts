@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/auth";
 import {
   createProduct,
   updateProduct,
@@ -52,6 +53,8 @@ export async function createProductAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -72,6 +75,8 @@ export async function updateProductAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -88,11 +93,13 @@ export async function updateProductAction(
 }
 
 export async function deleteProductAction(id: string) {
+  await requireSession();
   await deleteProduct(id);
   revalidatePath("/administracion/productos");
 }
 
 export async function bulkDeleteProductsAction(ids: string[]) {
+  await requireSession();
   if (ids.length === 0) return;
   await deleteProducts(ids);
   revalidatePath("/administracion/productos");
@@ -102,6 +109,7 @@ export async function bulkUpdateProductsAction(
   ids: string[],
   data: { categoryId?: string; brandId?: string | null; isActive?: boolean },
 ) {
+  await requireSession();
   if (ids.length === 0 || Object.keys(data).length === 0) return;
   await bulkUpdateProducts(ids, data);
   revalidatePath("/administracion/productos");

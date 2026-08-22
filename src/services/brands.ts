@@ -1,9 +1,15 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { Brand } from "@/types/catalog";
 
-export function listBrands(filters: { isActive?: boolean } = {}) {
-  return prisma.brand.findMany({ where: filters, orderBy: { name: "asc" } });
-}
+// Mismo criterio que listCategories: se lee en casi todas las páginas y
+// cambia poco. Invalidado con revalidateTag("brands") en actions.ts.
+export const listBrands = unstable_cache(
+  (filters: { isActive?: boolean } = {}) =>
+    prisma.brand.findMany({ where: filters, orderBy: { name: "asc" } }),
+  ["brands-list"],
+  { tags: ["brands"] },
+);
 
 export function countBrands() {
   return prisma.brand.count();

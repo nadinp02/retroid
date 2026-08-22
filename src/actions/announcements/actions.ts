@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
+import { requireSession } from "@/auth";
 import { upsertAnnouncement } from "@/services/announcements";
 import type { FormState } from "@/types/form-state";
 
@@ -35,6 +36,8 @@ export async function updateAnnouncementAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = announcementSchema.safeParse({
     isActive: formData.get("isActive") === "on",
     startAt: parseOptionalDate(formData.get("startAt")),
@@ -50,10 +53,9 @@ export async function updateAnnouncementAction(
   }
 
   await upsertAnnouncement(parsed.data);
-  // Invalida el layout público entero: el popup se lee ahí, no en una
-  // ruta puntual, así que revalidatePath("/administracion/anuncio") solo
-  // no alcanzaría para refrescarlo.
-  revalidatePath("/", "layout");
-  revalidatePath("/administracion/anuncio");
+  // getAnnouncement() está cacheada (unstable_cache, tag "announcement");
+  // esto invalida esa entrada tanto para el popup público como para esta
+  // misma página admin, que también la lee.
+  revalidateTag("announcement");
   redirect("/administracion/anuncio");
 }

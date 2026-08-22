@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
+import { requireSession } from "@/auth";
 import {
   createCategory,
   updateCategory,
@@ -30,6 +31,8 @@ export async function createCategoryAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = parseCategoryForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -41,7 +44,7 @@ export async function createCategoryAction(
   }
 
   await createCategory(parsed.data);
-  revalidatePath("/administracion/categorias");
+  revalidateTag("categories");
   redirect("/administracion/categorias");
 }
 
@@ -50,6 +53,8 @@ export async function updateCategoryAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = parseCategoryForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -61,11 +66,12 @@ export async function updateCategoryAction(
   }
 
   await updateCategory(id, parsed.data);
-  revalidatePath("/administracion/categorias");
+  revalidateTag("categories");
   redirect("/administracion/categorias");
 }
 
 export async function deleteCategoryAction(id: string) {
+  await requireSession();
   await deleteCategory(id);
-  revalidatePath("/administracion/categorias");
+  revalidateTag("categories");
 }

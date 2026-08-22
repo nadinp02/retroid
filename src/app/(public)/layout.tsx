@@ -136,7 +136,10 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             description: announcement.description,
             buttonText: announcement.buttonText,
             url: announcement.url,
-            version: announcement.updatedAt.toISOString(),
+            // getAnnouncement() pasa por unstable_cache: el valor cacheado
+            // se serializa, así que updatedAt puede llegar como string en
+            // vez de Date. new Date(...) normaliza ambos casos.
+            version: new Date(announcement.updatedAt).toISOString(),
           }}
         />
       )}

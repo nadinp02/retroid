@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
+import { requireSession } from "@/auth";
 import { createBrand, updateBrand, deleteBrand, getBrandBySlug } from "@/services/brands";
 import type { FormState } from "@/types/form-state";
 import { SLUG_REGEX, SLUG_ERROR_MESSAGE } from "@/utils/slug";
@@ -25,6 +26,8 @@ export async function createBrandAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = parseBrandForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -36,7 +39,7 @@ export async function createBrandAction(
   }
 
   await createBrand(parsed.data);
-  revalidatePath("/administracion/marcas");
+  revalidateTag("brands");
   redirect("/administracion/marcas");
 }
 
@@ -45,6 +48,8 @@ export async function updateBrandAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireSession();
+
   const parsed = parseBrandForm(formData);
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
@@ -56,11 +61,12 @@ export async function updateBrandAction(
   }
 
   await updateBrand(id, parsed.data);
-  revalidatePath("/administracion/marcas");
+  revalidateTag("brands");
   redirect("/administracion/marcas");
 }
 
 export async function deleteBrandAction(id: string) {
+  await requireSession();
   await deleteBrand(id);
-  revalidatePath("/administracion/marcas");
+  revalidateTag("brands");
 }

@@ -58,7 +58,11 @@ export function ProductFilters({
           {selectedCategory && <input type="hidden" name="categoria" value={selectedCategory} />}
           {selectedBrand && <input type="hidden" name="marca" value={selectedBrand} />}
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <label htmlFor="q" className="sr-only">
+            Buscar productos
+          </label>
           <Input
+            id="q"
             type="text"
             name="q"
             placeholder="Buscar productos..."

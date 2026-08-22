@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { requireSession } from "@/auth";
 import cloudinary from "@/lib/cloudinary";
 import {
   ALLOWED_IMAGE_FORMATS,
@@ -17,13 +17,6 @@ import {
 } from "@/services/products";
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
-
-async function requireSession() {
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("No autorizado");
-  }
-}
 
 type UploadSignature = {
   timestamp: number;

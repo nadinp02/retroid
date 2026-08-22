@@ -8,7 +8,23 @@ type ProductFilters = {
   isActive?: boolean;
 };
 
-const PRODUCT_RELATIONS = {
+// Listado admin (ProductTable): no pinta imágenes, no las trae.
+const PRODUCT_LIST_RELATIONS = {
+  category: true,
+  brand: true,
+};
+
+// Card pública (home, /productos): solo pinta la portada, trae 1 imagen en
+// vez de la relación completa.
+const PRODUCT_CARD_RELATIONS = {
+  category: true,
+  brand: true,
+  images: { orderBy: { position: "asc" as const }, take: 1 },
+};
+
+// Detalle de producto y editor de imágenes en admin: necesitan la galería
+// completa.
+const PRODUCT_DETAIL_RELATIONS = {
   category: true,
   brand: true,
   images: { orderBy: { position: "asc" as const } },
@@ -17,13 +33,22 @@ const PRODUCT_RELATIONS = {
 export function listProducts(filters: ProductFilters = {}) {
   return prisma.product.findMany({
     where: filters,
-    include: PRODUCT_RELATIONS,
+    include: PRODUCT_LIST_RELATIONS,
     orderBy: { createdAt: "desc" },
   });
 }
 
 export function countProducts() {
   return prisma.product.count();
+}
+
+// Para sitemap.ts: solo lo necesario para armar <url>, nada de relaciones.
+export function listActiveProductSlugs() {
+  return prisma.product.findMany({
+    where: { isActive: true },
+    select: { slug: true, updatedAt: true },
+    orderBy: { updatedAt: "desc" },
+  });
 }
 
 type PublicProductFilters = {
@@ -51,7 +76,7 @@ export async function listPublicProducts(filters: PublicProductFilters = {}) {
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      include: PRODUCT_RELATIONS,
+      include: PRODUCT_CARD_RELATIONS,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -71,14 +96,14 @@ export async function listPublicProducts(filters: PublicProductFilters = {}) {
 export function getProductById(id: string) {
   return prisma.product.findUnique({
     where: { id },
-    include: PRODUCT_RELATIONS,
+    include: PRODUCT_DETAIL_RELATIONS,
   });
 }
 
 export function getProductBySlug(slug: string) {
   return prisma.product.findUnique({
     where: { slug },
-    include: PRODUCT_RELATIONS,
+    include: PRODUCT_DETAIL_RELATIONS,
   });
 }
 
