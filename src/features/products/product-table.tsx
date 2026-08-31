@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DeleteButton } from "@/components/delete-button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   deleteProductAction,
   bulkDeleteProductsAction,
@@ -88,10 +89,7 @@ export function ProductTable({
     setBulkStatus(NO_CHANGE);
   }
 
-  function handleBulkDelete() {
-    const count = selected.size;
-    if (!confirm(`¿Eliminar ${count} producto${count === 1 ? "" : "s"}?`)) return;
-
+  function confirmBulkDelete() {
     const ids = Array.from(selected);
     startTransition(async () => {
       await bulkDeleteProductsAction(ids);
@@ -223,16 +221,18 @@ export function ProductTable({
                 <Pencil className="size-3.5" />
                 Editar
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="gap-1.5"
-                disabled={isPending}
-                onClick={handleBulkDelete}
-              >
-                <Trash2 className="size-3.5" />
-                Eliminar
-              </Button>
+              <ConfirmDialog
+                trigger={
+                  <Button size="sm" variant="destructive" className="gap-1.5" disabled={isPending}>
+                    <Trash2 className="size-3.5" />
+                    Eliminar
+                  </Button>
+                }
+                title="Eliminar productos"
+                description={`¿Eliminar ${selected.size} producto${selected.size === 1 ? "" : "s"}? Esta acción no se puede deshacer.`}
+                confirmLabel="Eliminar"
+                onConfirm={confirmBulkDelete}
+              />
               <Button size="sm" variant="ghost" disabled={isPending} onClick={clearSelection}>
                 Cancelar
               </Button>
@@ -253,11 +253,12 @@ export function ProductTable({
                 />
               </TableHead>
               <TableHead>Nombre</TableHead>
-              <TableHead>Categoría</TableHead>
-              <TableHead>Marca</TableHead>
+              <TableHead className="hidden md:table-cell">Categoría</TableHead>
+              <TableHead className="hidden lg:table-cell">Marca</TableHead>
               <TableHead>Precio</TableHead>
-              <TableHead>Stock</TableHead>
+              <TableHead className="hidden sm:table-cell">Stock</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead className="hidden lg:table-cell">Edición</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -272,34 +273,43 @@ export function ProductTable({
                   />
                 </TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell className="text-muted-foreground">{product.category.name}</TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="hidden text-muted-foreground md:table-cell">
+                  {product.category.name}
+                </TableCell>
+                <TableCell className="hidden text-muted-foreground lg:table-cell">
                   {product.brand?.name ?? "Sin marca"}
                 </TableCell>
                 <TableCell className="font-mono text-primary">
                   {formatPrice(product.price)}
                 </TableCell>
-                <TableCell className="tabular-nums">{product.stock}</TableCell>
+                <TableCell className="hidden tabular-nums sm:table-cell">{product.stock}</TableCell>
                 <TableCell>
                   <Badge variant={product.isActive ? "success" : "secondary"}>
                     {product.isActive ? "Activo" : "Inactivo"}
                   </Badge>
                 </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {product.isLimitedEdition ? (
+                    <Badge variant="accent">Limitada</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="flex justify-end gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="gap-1.5"
+                    size="icon-sm"
+                    aria-label={`Editar ${product.name}`}
                     render={
                       <Link href={`/administracion/productos/${product.id}/editar`}>
                         <Pencil className="size-3.5" />
-                        Editar
                       </Link>
                     }
                   />
                   <DeleteButton
                     action={deleteProductAction.bind(null, product.id)}
-                    confirmMessage={`¿Eliminar el producto "${product.name}"?`}
+                    confirmMessage={`¿Eliminar el producto "${product.name}"? Esta acción no se puede deshacer.`}
+                    iconOnly
                   />
                 </TableCell>
               </TableRow>

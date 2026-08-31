@@ -25,11 +25,14 @@ export default async function EditarProductoPage({
   return (
     <div className="space-y-8">
       <SectionHeading>Editar producto</SectionHeading>
-      <ProductForm product={product} categories={categories} brands={brands} />
 
-      <div className="max-w-xl space-y-3 border-t border-border pt-8">
-        <h2 className="font-mono text-lg font-semibold tracking-tight uppercase">Imágenes</h2>
-        <ImageManager productId={product.id} images={product.images} />
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,36rem)_1fr] xl:items-start">
+        <ProductForm product={product} categories={categories} brands={brands} />
+
+        <div className="space-y-3">
+          <h2 className="font-mono text-lg font-semibold tracking-tight uppercase">Imágenes</h2>
+          <ImageManager productId={product.id} images={product.images} />
+        </div>
       </div>
     </div>
   );

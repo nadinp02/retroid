@@ -29,6 +29,7 @@ const productSchema = z.object({
     .int("El stock debe ser un número entero")
     .nonnegative("El stock no puede ser negativo"),
   isActive: z.boolean(),
+  isLimitedEdition: z.boolean(),
   categoryId: z.string().trim().min(1, "La categoría es obligatoria"),
   brandId: z
     .string()
@@ -44,6 +45,7 @@ function parseProductForm(formData: FormData) {
     price: formData.get("price"),
     stock: formData.get("stock"),
     isActive: formData.get("isActive") === "on",
+    isLimitedEdition: formData.get("isLimitedEdition") === "on",
     categoryId: formData.get("categoryId"),
     brandId: formData.get("brandId"),
   });

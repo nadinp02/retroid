@@ -19,7 +19,7 @@ type ProductosSearchParams = {
 const DEFAULT_CATALOG_META = {
   title: "Catálogo de Consolas Retro, Nintendo DS y 3DS",
   description:
-    "Catálogo completo de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Compra y venta en Argentina, envíos a todo el país.",
+    "Catálogo completo de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Compra y venta en Argentina, Envíos a toda Argentina.",
 };
 
 // Copys curados para las categorías/marcas conocidas de RETROID (coinciden
@@ -29,7 +29,7 @@ const CATEGORY_SEO: Record<string, { title: string; description: string }> = {
   consolas: {
     title: "Consolas Retro",
     description:
-      "Consolas retro Nintendo DS y Nintendo 3DS en Argentina, reacondicionadas y testeadas. Envíos a todo el país.",
+      "Consolas retro Nintendo DS y Nintendo 3DS en Argentina, reacondicionadas y testeadas. Envíos a toda Argentina.",
   },
   cartuchos: {
     title: "Cartuchos Nintendo DS",
@@ -51,7 +51,7 @@ const BRAND_SEO: Record<string, { title: string; description: string }> = {
   nintendo: {
     title: "Productos Nintendo",
     description:
-      "Consolas, cartuchos y accesorios Nintendo DS y 3DS en Argentina. Envíos a todo el país.",
+      "Consolas, cartuchos y accesorios Nintendo DS y 3DS en Argentina. Envíos a toda Argentina.",
   },
 };
 
@@ -103,7 +103,7 @@ export async function generateMetadata({
 
   const canonicalPath = buildCanonicalPath({ categoria, marca });
   const ogImage = {
-    url: "/banner.png",
+    url: "/banner.jpg",
     width: 1279,
     height: 929,
     alt: "RETROID — catálogo de consolas retro",
@@ -163,9 +163,7 @@ export default async function ProductosPage({
           <ArrowLeft className="size-3.5" />
           Volver
         </Link>
-        <SectionHeading size="lg" glitch>
-          Catalogo.exe
-        </SectionHeading>
+        <SectionHeading size="lg">Catálogo</SectionHeading>
         <p className="text-sm text-muted-foreground">
           {products.length > 0
             ? `${products.length} producto${products.length === 1 ? "" : "s"} en esta página`

@@ -5,8 +5,11 @@ import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
 import { siteConfig } from "@/lib/site-config";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { AnnouncementPopup } from "@/components/announcement-popup";
+import { AnnouncementMarquee } from "@/components/announcement-marquee";
 import { MobileNav } from "@/components/mobile-nav";
+import { ProductsNavMenu } from "@/components/products-nav-menu";
 import { getActiveAnnouncement } from "@/services/announcements";
+import { listCategories } from "@/services/categories";
 
 function Wordmark({ className }: { className?: string }) {
   return (
@@ -22,23 +25,26 @@ function Wordmark({ className }: { className?: string }) {
 export default async function PublicLayout({ children }: { children: ReactNode }) {
   const generalWhatsAppUrl = buildWhatsAppUrl(buildGeneralWhatsAppMessage());
   const generalEvent = { name: "whatsapp_click_general" as const };
-  const announcement = await getActiveAnnouncement();
+  const [announcement, categories] = await Promise.all([
+    getActiveAnnouncement(),
+    listCategories({ isActive: true }),
+  ]);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    // overflow-x-hidden: red de seguridad para las secciones full-bleed de
+    // la Home (100vw puede superar el viewport visible por el ancho del
+    // scrollbar) — evita que aparezca scroll horizontal.
+    <div className="flex min-h-full flex-1 flex-col overflow-x-hidden">
       <header className="sticky top-0 z-40 border-b border-border bg-[#0d0d0f]/95">
-        <div className="relative mx-auto grid h-12 max-w-6xl grid-cols-3 items-center px-4 sm:px-6">
+        <div className="relative mx-auto grid h-12 max-w-7xl grid-cols-3 items-center px-4 sm:px-6">
           <div className="flex items-center justify-self-start">
-            <MobileNav />
+            <MobileNav categories={categories} />
             <nav className="hidden items-center gap-6 font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase sm:flex">
               <Link href="/" className="group transition-colors hover:text-accent">
                 <span className="opacity-0 transition-opacity group-hover:opacity-100">&gt;</span>{" "}
                 Inicio
               </Link>
-              <Link href="/productos" className="group transition-colors hover:text-accent">
-                <span className="opacity-0 transition-opacity group-hover:opacity-100">&gt;</span>{" "}
-                Productos
-              </Link>
+              <ProductsNavMenu categories={categories} />
             </nav>
           </div>
 
@@ -63,17 +69,19 @@ export default async function PublicLayout({ children }: { children: ReactNode }
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
+      <AnnouncementMarquee />
+
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
         {children}
       </main>
 
       <footer className="border-t border-border bg-[#0d0d0f]/60">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
           <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
             <div className="max-w-xs space-y-3">
               <Wordmark />
               <p className="text-sm text-muted-foreground">
-                Consolas retro importadas y accesorios seleccionados.
+                Nintendo DS, 3DS y accesorios seleccionados. Importados desde Japón.
               </p>
             </div>
 

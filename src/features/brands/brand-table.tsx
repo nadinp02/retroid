@@ -29,7 +29,7 @@ export function BrandTable({ brands }: { brands: Brand[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
-            <TableHead>Slug</TableHead>
+            <TableHead className="hidden sm:table-cell">Slug</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
@@ -38,7 +38,9 @@ export function BrandTable({ brands }: { brands: Brand[] }) {
           {brands.map((brand) => (
             <TableRow key={brand.id}>
               <TableCell className="font-medium">{brand.name}</TableCell>
-              <TableCell className="text-muted-foreground">{brand.slug}</TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
+                {brand.slug}
+              </TableCell>
               <TableCell>
                 <Badge variant={brand.isActive ? "success" : "secondary"}>
                   {brand.isActive ? "Activa" : "Inactiva"}
@@ -47,18 +49,18 @@ export function BrandTable({ brands }: { brands: Brand[] }) {
               <TableCell className="flex justify-end gap-2">
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="gap-1.5"
+                  size="icon-sm"
+                  aria-label={`Editar ${brand.name}`}
                   render={
                     <Link href={`/administracion/marcas/${brand.id}/editar`}>
                       <Pencil className="size-3.5" />
-                      Editar
                     </Link>
                   }
                 />
                 <DeleteButton
                   action={deleteBrandAction.bind(null, brand.id)}
-                  confirmMessage={`¿Eliminar la marca "${brand.name}"?`}
+                  confirmMessage={`¿Eliminar la marca "${brand.name}"? Esta acción no se puede deshacer.`}
+                  iconOnly
                 />
               </TableCell>
             </TableRow>

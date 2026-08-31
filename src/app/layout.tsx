@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { ScanlineOverlay } from "@/components/scanline-overlay";
 import { siteConfig } from "@/lib/site-config";
 import "./globals.css";
@@ -14,11 +14,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Fuente display para el hero y títulos hero de la Home (--font-display en
+// globals.css). Deliberadamente separada de --font-heading (que sigue
+// siendo Geist Sans y alimenta CardTitle en el panel de admin) para no
+// cambiarle la tipografía al admin.
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+  weight: ["700", "900"],
+});
+
 const DEFAULT_TITLE = "RETROID | Consolas Retro, Nintendo DS y 3DS Argentina";
 const DEFAULT_DESCRIPTION =
   "Compra y venta de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Envíos a todo Argentina.";
 const DEFAULT_OG_IMAGE = {
-  url: "/banner.png",
+  url: "/banner.jpg",
   width: 1279,
   height: 929,
   alt: "RETROID — consolas retro Nintendo DS y 3DS",
@@ -77,7 +87,7 @@ export default function RootLayout({
     // no depende de prefers-color-scheme ni de ningún toggle.
     <html
       lang="es"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} h-full antialiased`}
       style={{ colorScheme: "dark" }}
     >
       <body className="min-h-full flex flex-col">

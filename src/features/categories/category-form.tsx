@@ -2,11 +2,10 @@
 
 import { useActionState } from "react";
 import { WindowPanel } from "@/components/ui/window-panel";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SubmitButton } from "@/components/submit-button";
-import { FieldError } from "@/components/field-error";
+import { NameSlugFields } from "@/components/name-slug-fields";
 import { createCategoryAction, updateCategoryAction } from "@/actions/categories/actions";
 import { emptyFormState } from "@/types/form-state";
 import type { Category } from "@/types/catalog";
@@ -24,17 +23,12 @@ export function CategoryForm({ category }: { category?: Category }) {
     >
       <div className="p-5">
         <form action={formAction} className="space-y-5">
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Nombre</Label>
-            <Input id="name" name="name" defaultValue={category?.name} required />
-            <FieldError message={state.errors.name?.[0]} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="slug">Slug</Label>
-            <Input id="slug" name="slug" defaultValue={category?.slug} required />
-            <FieldError message={state.errors.slug?.[0]} />
-          </div>
+          <NameSlugFields
+            initialName={category?.name}
+            initialSlug={category?.slug}
+            nameError={state.errors.name?.[0]}
+            slugError={state.errors.slug?.[0]}
+          />
 
           <div className="flex items-center gap-2">
             <Checkbox id="isActive" name="isActive" defaultChecked={category?.isActive ?? true} />

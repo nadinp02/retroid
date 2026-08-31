@@ -51,10 +51,21 @@ export function listActiveProductSlugs() {
   });
 }
 
+// Para el selector "¿sobre qué producto?" del formulario público de
+// reseñas: solo lo necesario para poblar un <select>, nada de relaciones.
+export function listProductOptions() {
+  return prisma.product.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
 type PublicProductFilters = {
   categorySlug?: string;
   brandSlug?: string;
   search?: string;
+  isLimitedEdition?: boolean;
   page?: number;
   pageSize?: number;
 };
@@ -64,13 +75,14 @@ type PublicProductFilters = {
  * y filtros por slug de categoría/marca + búsqueda por nombre.
  */
 export async function listPublicProducts(filters: PublicProductFilters = {}) {
-  const { categorySlug, brandSlug, search, page = 1, pageSize = 12 } = filters;
+  const { categorySlug, brandSlug, search, isLimitedEdition, page = 1, pageSize = 12 } = filters;
 
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     ...(categorySlug && { category: { slug: categorySlug } }),
     ...(brandSlug && { brand: { slug: brandSlug } }),
     ...(search && { name: { contains: search, mode: "insensitive" } }),
+    ...(isLimitedEdition && { isLimitedEdition: true }),
   };
 
   const [products, total] = await Promise.all([
@@ -109,7 +121,9 @@ export function getProductBySlug(slug: string) {
 
 type CreateProductInput = Pick<Product, "name" | "slug" | "categoryId"> & {
   price: number | string;
-} & Partial<Pick<Product, "description" | "stock" | "sku" | "isActive" | "brandId">>;
+} & Partial<
+    Pick<Product, "description" | "stock" | "sku" | "isActive" | "isLimitedEdition" | "brandId">
+  >;
 
 export function createProduct(data: CreateProductInput) {
   return prisma.product.create({ data });

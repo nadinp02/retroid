@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { WindowPanel } from "@/components/ui/window-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 
-export default async function CategoriasPage() {
+export default async function CategoríasPage() {
   const categories = await listCategories();
 
   return (
@@ -28,7 +28,7 @@ export default async function CategoriasPage() {
           }
         />
       </div>
-      <WindowPanel title="CATEGORIAS" bodyClassName="p-4">
+      <WindowPanel title="Categorías" bodyClassName="p-4">
         <CategoryTable categories={categories} />
       </WindowPanel>
     </div>

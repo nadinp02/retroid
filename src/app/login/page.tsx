@@ -33,7 +33,7 @@ export default async function LoginPage({
 
   return (
     <main className="flex min-h-full flex-1 items-center justify-center px-4 py-16">
-      <WindowPanel title="LOGIN.EXE" className="w-full max-w-sm">
+      <WindowPanel title="LOGIN" className="w-full max-w-sm">
         <div className="space-y-1.5 border-b border-border p-5">
           <p className="font-mono text-lg font-bold tracking-tight">
             <span className="text-primary">RETROID</span>{" "}

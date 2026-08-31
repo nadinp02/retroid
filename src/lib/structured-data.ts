@@ -4,6 +4,7 @@
 // lógica de armado vive acá, no se duplica en los componentes.
 
 import { siteConfig } from "@/lib/site-config";
+import type { ReviewSummary } from "@/types/reviews";
 
 export function organizationJsonLd() {
   return {
@@ -11,7 +12,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: siteConfig.companyName,
     url: siteConfig.url,
-    logo: `${siteConfig.url}/banner.png`,
+    logo: `${siteConfig.url}/banner.jpg`,
     ...(siteConfig.instagramUrl ? { sameAs: [siteConfig.instagramUrl] } : {}),
   };
 }
@@ -26,7 +27,7 @@ type ProductForJsonLd = {
   images: { url: string; alt: string | null }[];
 };
 
-export function productJsonLd(product: ProductForJsonLd) {
+export function productJsonLd(product: ProductForJsonLd, reviewSummary?: ReviewSummary) {
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -34,6 +35,17 @@ export function productJsonLd(product: ProductForJsonLd) {
     description: product.description ?? product.name,
     image: product.images.map((image) => image.url),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand.name } } : {}),
+    // aggregateRating requiere al menos 1 reseña aprobada — de lo contrario
+    // Google Rich Results rechaza el bloque completo.
+    ...(reviewSummary && reviewSummary.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviewSummary.average.toFixed(1),
+            reviewCount: reviewSummary.count,
+          },
+        }
+      : {}),
     offers: {
       "@type": "Offer",
       url: `${siteConfig.url}/productos/${product.slug}`,
@@ -42,6 +54,21 @@ export function productJsonLd(product: ProductForJsonLd) {
       availability:
         product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     },
+  };
+}
+
+export function breadcrumbJsonLd(items: { label: string; href?: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      // El último item (página actual) no lleva `item` — así lo indica la
+      // spec de schema.org para breadcrumbs sin URL propia.
+      ...(item.href ? { item: `${siteConfig.url}${item.href}` } : {}),
+    })),
   };
 }
 

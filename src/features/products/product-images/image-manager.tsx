@@ -3,8 +3,10 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ImageOff, ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   createProductImageAction,
   deleteProductImageAction,
@@ -29,6 +31,7 @@ export function ImageManager({
   const [uploading, setUploading] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -96,7 +99,6 @@ export function ImageManager({
   }
 
   async function handleDelete(imageId: string, publicId: string) {
-    if (!confirm("¿Eliminar esta imagen?")) return;
     setPendingId(imageId);
     setError(null);
     try {
@@ -173,19 +175,31 @@ export function ImageManager({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {images.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Todavía no hay imágenes.</p>
+        <p className="border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          Todavía no hay imágenes. Subí al menos una para que el producto se vea en el catálogo.
+        </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
           {images.map((image, index) => (
             <div key={image.id} className="space-y-2 rounded-lg border border-border p-2">
               <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
-                <Image
-                  src={image.url}
-                  alt={image.alt ?? ""}
-                  fill
-                  sizes="200px"
-                  className="object-cover"
-                />
+                {brokenIds.has(image.id) ? (
+                  <div className="flex size-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
+                    <ImageOff className="size-6" />
+                    <span className="text-center text-xs">No se pudo cargar</span>
+                  </div>
+                ) : (
+                  <Image
+                    src={image.url}
+                    alt={image.alt ?? ""}
+                    fill
+                    sizes="200px"
+                    className="object-cover"
+                    onError={() =>
+                      setBrokenIds((prev) => new Set(prev).add(image.id))
+                    }
+                  />
+                )}
                 {index === 0 && (
                   <Badge className="absolute left-1 top-1">Principal</Badge>
                 )}
@@ -198,8 +212,9 @@ export function ImageManager({
                   disabled={pendingId === image.id || index === 0}
                   onClick={() => handleMove(index, -1)}
                   aria-label="Mover antes"
+                  title="Mover antes"
                 >
-                  ←
+                  <ArrowLeft className="size-3.5" />
                 </Button>
                 <Button
                   type="button"
@@ -208,29 +223,39 @@ export function ImageManager({
                   disabled={pendingId === image.id || index === images.length - 1}
                   onClick={() => handleMove(index, 1)}
                   aria-label="Mover después"
+                  title="Mover después"
                 >
-                  →
+                  <ArrowRight className="size-3.5" />
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="icon-sm"
                   disabled={pendingId === image.id || index === 0}
                   onClick={() => handleSetPrimary(image.id)}
+                  aria-label="Marcar como principal"
+                  title="Marcar como principal"
                 >
-                  Principal
+                  <Star className="size-3.5" />
                 </Button>
               </div>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className="w-full"
-                disabled={pendingId === image.id}
-                onClick={() => handleDelete(image.id, image.publicId)}
-              >
-                Eliminar
-              </Button>
+              <ConfirmDialog
+                trigger={
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    disabled={pendingId === image.id}
+                  >
+                    Eliminar
+                  </Button>
+                }
+                title="Eliminar imagen"
+                description="¿Eliminar esta imagen? Esta acción no se puede deshacer."
+                confirmLabel="Eliminar"
+                onConfirm={() => handleDelete(image.id, image.publicId)}
+              />
             </div>
           ))}
         </div>

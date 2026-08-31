@@ -10,6 +10,9 @@ export default async function NuevoProductoPage() {
     <div className="space-y-4">
       <SectionHeading>Nuevo producto</SectionHeading>
       <ProductForm categories={categories} brands={brands} />
+      <p className="max-w-xl text-sm text-muted-foreground">
+        Vas a poder subir las imágenes después de crear el producto.
+      </p>
     </div>
   );
 }

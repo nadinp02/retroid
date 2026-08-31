@@ -29,7 +29,7 @@ export function CategoryTable({ categories }: { categories: Category[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
-            <TableHead>Slug</TableHead>
+            <TableHead className="hidden sm:table-cell">Slug</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
@@ -38,7 +38,9 @@ export function CategoryTable({ categories }: { categories: Category[] }) {
           {categories.map((category) => (
             <TableRow key={category.id}>
               <TableCell className="font-medium">{category.name}</TableCell>
-              <TableCell className="text-muted-foreground">{category.slug}</TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
+                {category.slug}
+              </TableCell>
               <TableCell>
                 <Badge variant={category.isActive ? "success" : "secondary"}>
                   {category.isActive ? "Activa" : "Inactiva"}
@@ -47,18 +49,18 @@ export function CategoryTable({ categories }: { categories: Category[] }) {
               <TableCell className="flex justify-end gap-2">
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="gap-1.5"
+                  size="icon-sm"
+                  aria-label={`Editar ${category.name}`}
                   render={
                     <Link href={`/administracion/categorias/${category.id}/editar`}>
                       <Pencil className="size-3.5" />
-                      Editar
                     </Link>
                   }
                 />
                 <DeleteButton
                   action={deleteCategoryAction.bind(null, category.id)}
-                  confirmMessage={`¿Eliminar la categoría "${category.name}"?`}
+                  confirmMessage={`¿Eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`}
+                  iconOnly
                 />
               </TableCell>
             </TableRow>

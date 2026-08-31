@@ -3,13 +3,16 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Cable, Briefcase, Gamepad2, Layers, MessageCircle, Package } from "lucide-react";
-import { listPublicProducts } from "@/services/products";
+import { listPublicProducts, listProductOptions } from "@/services/products";
 import { listCategories } from "@/services/categories";
+import { listApprovedReviews, getReviewSummary } from "@/services/reviews";
 import { ProductGrid } from "@/features/products/product-grid";
+import { ReviewsSection } from "@/features/reviews/reviews-section";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { GlitchText } from "@/components/glitch-text";
+import { BenefitsStrip } from "@/components/benefits-strip";
 import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
 import { organizationJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
 
@@ -27,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // openGraph/twitter no se heredan en profundidad del layout raíz: si esta
   // página define los suyos, tiene que repetir la imagen o la pierde.
   const ogImage = {
-    url: "/banner.png",
+    url: "/banner.jpg",
     width: 1279,
     height: 929,
     alt: "RETROID — consolas retro Nintendo DS y 3DS",
@@ -64,32 +67,59 @@ const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string }>> = {
 };
 
 export default async function HomePage() {
-  const [{ products: featured }, categories] = await Promise.all([
+  const [
+    { products: featured },
+    { products: limitedEditions },
+    categories,
+    reviewSummary,
+    reviews,
+    productOptions,
+  ] = await Promise.all([
     listPublicProducts({ pageSize: 4 }),
+    listPublicProducts({ pageSize: 4, isLimitedEdition: true }),
     listCategories({ isActive: true }),
+    getReviewSummary(),
+    listApprovedReviews({ pageSize: 6 }),
+    listProductOptions(),
   ]);
 
   const whatsappUrl = buildWhatsAppUrl(buildGeneralWhatsAppMessage());
 
   return (
-    <div className="space-y-24 sm:space-y-32">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={jsonLdScriptProps(organizationJsonLd())}
       />
-      {/* Hero: portada de software, no landing genérica */}
-      <section className="grid items-center gap-10 py-8 sm:py-12 lg:grid-cols-2 lg:gap-6">
-        <div className="flex flex-col items-start gap-6 text-left">
-          <p className="font-mono text-xs tracking-[0.2em] text-accent uppercase">
+
+      {/* Hero: una sola imagen de fondo (sin carousel), full-bleed. El
+          -mt-10/-mt-14 cancela el padding-top de <main> para que quede
+          pegado al announcement bar, tal como en la referencia. */}
+      <section className="full-bleed relative -mt-10 h-[78svh] min-h-[540px] overflow-hidden sm:-mt-14 sm:h-[82svh] sm:min-h-[620px] lg:h-[88svh] lg:min-h-[680px] lg:max-h-[820px]">
+        <Image
+          src="/banner.jpg"
+          alt="Mano esquelética sosteniendo una Nintendo 3DS"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        {/* Overlay oscuro/degradado: garantiza legibilidad del texto sin
+            depender de en qué parte de la imagen recorte cada viewport. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/65 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+
+        <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center gap-5 px-4 sm:px-6">
+          <p className="font-mono text-xs tracking-[0.2em] text-primary uppercase">
             Nintendo DS // 3DS // Importadas desde Japón
           </p>
-          <h1 className="text-glitch max-w-xl text-balance text-4xl font-bold tracking-tight sm:text-6xl">
-            Consolas <GlitchText>Retro.</GlitchText> Historias que siguen vivas.
+          <h1 className="max-w-2xl text-balance font-display text-4xl leading-[1.05] font-black text-white sm:text-6xl lg:text-7xl">
+            Historias que siguen <GlitchText>en juego</GlitchText>.
           </h1>
-          <p className="max-w-md text-balance text-muted-foreground">
-            Nintendo DS, 3DS y más. Importadas desde Japón. Seleccionadas para vos.
+          <p className="max-w-md text-balance text-base text-white/80 sm:text-lg">
+            Nintendo DS, 3DS, accesorios y ediciones difíciles de conseguir, seleccionadas una por una.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <Button size="lg" render={<Link href="/productos">Ver catálogo</Link>} />
             <WhatsAppButton
               url={whatsappUrl}
@@ -102,73 +132,98 @@ export default async function HomePage() {
               event={{ name: "whatsapp_click_general" }}
               variant="outline"
               size="lg"
+              className="border-white/30 bg-black/30 text-white backdrop-blur-sm hover:border-primary hover:bg-black/50 hover:text-white"
             />
           </div>
         </div>
-
-        <div className="animate-float relative mx-auto aspect-[16/10] w-full max-w-lg lg:max-w-none">
-          <Image
-            src="/banner.png"
-            alt="Mano esquelética sosteniendo una Nintendo 3DS"
-            fill
-            priority
-            sizes="(min-width: 1024px) 45vw, 90vw"
-            className="object-contain"
-          />
-        </div>
       </section>
 
-      {categories.length > 0 && (
-        <section className="space-y-6">
-          <div className="space-y-1">
-            <SectionHeading as="h2" size="sm" glitch>
-              Categorías
-            </SectionHeading>
-            <p className="text-sm text-muted-foreground">
-              Encontrá lo que buscás por tipo de producto.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {categories.map((category) => {
-              const Icon = CATEGORY_ICONS[category.slug] ?? Package;
-              return (
-                <Link
-                  key={category.id}
-                  href={`/productos?categoria=${category.slug}`}
-                  className="group flex flex-col items-start gap-4 border border-border bg-card p-6 transition-colors hover:border-accent"
-                >
-                  <div className="flex size-11 items-center justify-center border border-accent/40 bg-accent/10 text-accent transition-colors group-hover:bg-accent/20">
-                    <Icon className="size-5" />
-                  </div>
-                  <span className="font-mono text-sm font-medium tracking-wide uppercase">
-                    {category.name}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <BenefitsStrip />
 
-      {featured.length > 0 && (
-        <section className="space-y-6">
-          <div className="flex items-end justify-between gap-4">
+      <div className="space-y-24 pt-16 sm:space-y-32 sm:pt-20">
+        {categories.length > 0 && (
+          <section className="space-y-6">
             <div className="space-y-1">
-              <SectionHeading as="h2" size="sm" glitch>
-                Destacados
+              <SectionHeading as="h2" size="md" variant="display">
+                Categorías
               </SectionHeading>
-              <p className="text-sm text-muted-foreground">Una selección de nuestro catálogo.</p>
+              <p className="text-sm text-muted-foreground">
+                Encontrá lo que buscás por tipo de producto.
+              </p>
             </div>
-            <Link
-              href="/productos"
-              className="hidden font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-accent sm:block"
-            >
-              Ver todo →
-            </Link>
-          </div>
-          <ProductGrid products={featured} />
-        </section>
-      )}
-    </div>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {categories.map((category) => {
+                const Icon = CATEGORY_ICONS[category.slug] ?? Package;
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/productos?categoria=${category.slug}`}
+                    className="group flex flex-col items-start gap-4 border border-border bg-card p-6 transition-colors hover:border-primary"
+                  >
+                    <div className="flex size-11 items-center justify-center border border-primary/40 bg-primary/10 text-primary transition-colors group-hover:border-primary/70 group-hover:bg-primary/20">
+                      <Icon className="size-5" />
+                    </div>
+                    <span className="font-mono text-sm font-medium tracking-wide uppercase">
+                      {category.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {featured.length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-end justify-between gap-4">
+              <div className="space-y-1">
+                <SectionHeading as="h2" size="md" variant="display">
+                  Últimos ingresos
+                </SectionHeading>
+                <p className="text-sm text-muted-foreground">Lo más nuevo que sumamos al catálogo.</p>
+              </div>
+              <Link
+                href="/productos"
+                className="hidden font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-accent sm:block"
+              >
+                Ver todo →
+              </Link>
+            </div>
+            <ProductGrid products={featured} />
+          </section>
+        )}
+
+        {limitedEditions.length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-end justify-between gap-4">
+              <div className="space-y-1">
+                <SectionHeading as="h2" size="md" variant="display">
+                  Ediciones limitadas
+                </SectionHeading>
+                <p className="text-sm text-muted-foreground">
+                  Piezas únicas, disponibles solo mientras dure el stock.
+                </p>
+              </div>
+              <Link
+                href="/productos"
+                className="hidden font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-accent sm:block"
+              >
+                Ver todo →
+              </Link>
+            </div>
+            <ProductGrid products={limitedEditions} />
+          </section>
+        )}
+
+        <ReviewsSection
+          title="Reseñas"
+          description="Experiencias reales"
+          headingVariant="display"
+          summary={reviewSummary}
+          reviews={reviews}
+          products={productOptions}
+        />
+      </div>
+    </>
   );
 }

@@ -31,7 +31,7 @@ export default async function UsuariosPage() {
                 <TableHead>Nombre</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Rol</TableHead>
-                <TableHead>Alta</TableHead>
+                <TableHead className="hidden sm:table-cell">Alta</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -44,7 +44,7 @@ export default async function UsuariosPage() {
                       {user.role}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {new Intl.DateTimeFormat("es-AR").format(user.createdAt)}
                   </TableCell>
                 </TableRow>

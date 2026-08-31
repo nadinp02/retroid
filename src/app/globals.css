@@ -10,6 +10,10 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-geist-sans);
+  /* Serif display (Playfair) reservada para el hero y títulos hero de la
+     Home — ver AGENTS del rediseño. No confundir con --font-heading, que
+     sigue siendo sans y la usa CardTitle en el admin. */
+  --font-display: var(--font-playfair-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -124,21 +128,10 @@
   }
 }
 
-/* Microdetalles retro: scanlines/ruido (ver ScanlineOverlay), glitch de
-   texto sutil en hover, y el flotado del hero. Todo puramente decorativo,
-   nunca interfiere con clicks ni con la legibilidad. */
+/* Microdetalles retro: scanlines/ruido (ver ScanlineOverlay) y el flotado
+   del hero. Todo puramente decorativo, nunca interfiere con clicks ni con
+   la legibilidad. */
 @layer utilities {
-  .text-glitch {
-    position: relative;
-    display: inline-block;
-  }
-  .text-glitch:hover,
-  .text-glitch:focus-within {
-    text-shadow:
-      2px 0 #8b5cf6,
-      -2px 0 #facc15;
-  }
-
   @keyframes float-y {
     0%,
     100% {
@@ -157,13 +150,19 @@
     }
   }
 
-  /* Glitch automático (sin hover) para la palabra RETRO del wordmark.
-     ::before/::after duplican el texto vía attr(data-text) y lo separan
-     en dos mitades de color que se sacuden en direcciones opuestas —
-     el clásico split RGB de glitch, disparado por GlitchText cada 5-8s. */
+  /* Glitch automático (sin hover), genérico (no usa colores de marca):
+     3 capas duplicadas del texto (::before, ::after y .glitch-slice) en
+     blanco y negro puros, cada una recortada a una franja horizontal fina
+     (como interferencia de señal) y desplazada SOLO en el eje X con
+     steps() para que el temblor se vea entrecortado/digital en vez de
+     suave — nunca hay componente vertical. La capa base también tiembla
+     un poco. Disparado por GlitchText cada 0.6-1.2s. */
   .glitch-auto {
     position: relative;
     display: inline-block;
+  }
+  .glitch-auto.is-glitching {
+    animation: glitch-jitter-base 220ms steps(4, end);
   }
   .glitch-auto.is-glitching::before,
   .glitch-auto.is-glitching::after {
@@ -173,57 +172,178 @@
     overflow: hidden;
     pointer-events: none;
   }
+  .glitch-auto .glitch-slice {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+  }
   .glitch-auto.is-glitching::before {
-    color: #8b5cf6;
-    clip-path: inset(0 0 55% 0);
-    animation: glitch-shift-a 400ms steps(2, end);
+    color: #ffffff;
+    clip-path: inset(6% 0 78% 0);
+    animation: glitch-shift-a 220ms steps(4, end);
   }
   .glitch-auto.is-glitching::after {
-    color: #facc15;
-    clip-path: inset(55% 0 0 0);
-    animation: glitch-shift-b 400ms steps(2, end);
+    color: #000000;
+    clip-path: inset(66% 0 10% 0);
+    animation: glitch-shift-b 220ms steps(4, end);
+  }
+  .glitch-auto.is-glitching .glitch-slice {
+    opacity: 1;
+    color: #ffffff;
+    clip-path: inset(38% 0 46% 0);
+    animation: glitch-shift-c 220ms steps(4, end);
+  }
+  @keyframes glitch-jitter-base {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-1px);
+    }
+    50% {
+      transform: translateX(1px);
+    }
+    75% {
+      transform: translateX(-1px);
+    }
   }
   @keyframes glitch-shift-a {
     0%,
     100% {
-      transform: translate(0, 0);
+      transform: translateX(0);
     }
-    20% {
-      transform: translate(-3px, -1px);
+    25% {
+      transform: translateX(-6px);
     }
-    40% {
-      transform: translate(3px, 1px);
+    50% {
+      transform: translateX(4px);
     }
-    60% {
-      transform: translate(-2px, 1px);
-    }
-    80% {
-      transform: translate(2px, -1px);
+    75% {
+      transform: translateX(-3px);
     }
   }
   @keyframes glitch-shift-b {
     0%,
     100% {
-      transform: translate(0, 0);
+      transform: translateX(0);
     }
-    20% {
-      transform: translate(3px, 1px);
+    25% {
+      transform: translateX(5px);
     }
-    40% {
-      transform: translate(-3px, -1px);
+    50% {
+      transform: translateX(-5px);
     }
-    60% {
-      transform: translate(2px, -1px);
+    75% {
+      transform: translateX(3px);
     }
-    80% {
-      transform: translate(-2px, 1px);
+  }
+  @keyframes glitch-shift-c {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(3px);
+    }
+    50% {
+      transform: translateX(-4px);
+    }
+    75% {
+      transform: translateX(2px);
     }
   }
   @media (prefers-reduced-motion: reduce) {
+    .glitch-auto.is-glitching {
+      animation: none;
+    }
     .glitch-auto.is-glitching::before,
     .glitch-auto.is-glitching::after {
       content: none;
       animation: none;
     }
+    .glitch-auto.is-glitching .glitch-slice {
+      opacity: 0;
+      animation: none;
+    }
+  }
+
+  /* Hace que una sección escape del contenedor centrado (max-w-6xl mx-auto
+     px-4) del <main> y ocupe todo el ancho del viewport — usado por el
+     hero y la franja de beneficios de la Home. El overflow-x-hidden en el
+     wrapper raíz de (public)/layout.tsx cubre el borde de 100vw vs.
+     scrollbar para que nunca aparezca scroll horizontal. */
+  .full-bleed {
+    position: relative;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+  }
+
+  /* Marquee del announcement bar: dos copias idénticas del contenido, la
+     segunda hace de relleno — animar -50% del ancho total (= el ancho de
+     una copia) da un loop perfectamente continuo sin salto. */
+  @keyframes marquee-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .animate-marquee {
+    animation: marquee-scroll 24s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+    }
+  }
+
+  /* RatingInput (features/reviews): selector de 1 a 5 estrellas 100% CSS,
+     sin JS. Los <input type=radio> y <label> son hijos directos y planos
+     de .rating-input (no envueltos individualmente) para que el
+     combinador de hermanos generales (~) pueda alcanzarlos a todos. El
+     orden en el DOM va de 5 a 1 y se revierte visualmente con
+     row-reverse: así, "todo lo que sigue en el DOM" a un radio marcado
+     (o a un label en hover) queda visualmente a su izquierda. */
+  .rating-input {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.125rem;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .rating-input input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .rating-input label {
+    cursor: pointer;
+    line-height: 0;
+  }
+  .rating-input label svg {
+    fill: transparent;
+    color: var(--muted-foreground);
+    transition:
+      color 120ms ease,
+      fill 120ms ease;
+  }
+  .rating-input label:hover svg,
+  .rating-input label:hover ~ label svg,
+  .rating-input input:checked ~ label svg {
+    fill: currentColor;
+    color: var(--primary);
+  }
+  .rating-input input:focus-visible + label {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }

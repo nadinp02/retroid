@@ -1,18 +1,21 @@
 import type { ComponentType } from "react";
 import Link from "next/link";
-import { ImageIcon, Package, Tag, Tags } from "lucide-react";
+import { ImageIcon, Package, Star, Tag, Tags } from "lucide-react";
+import { ReviewStatus } from "@prisma/client";
 import { countProducts, countProductImages } from "@/services/products";
 import { countCategories } from "@/services/categories";
 import { countBrands } from "@/services/brands";
+import { countReviewsByStatus } from "@/services/reviews";
 import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 export default async function AdministracionPage() {
-  const [products, categories, brands, images] = await Promise.all([
+  const [products, categories, brands, images, pendingReviews] = await Promise.all([
     countProducts(),
     countCategories(),
     countBrands(),
     countProductImages(),
+    countReviewsByStatus(ReviewStatus.PENDING),
   ]);
 
   const stats: { label: string; value: number; href: string; icon: ComponentType<{ className?: string }> }[] = [
@@ -20,6 +23,12 @@ export default async function AdministracionPage() {
     { label: "Categorías", value: categories, href: "/administracion/categorias", icon: Tags },
     { label: "Marcas", value: brands, href: "/administracion/marcas", icon: Tag },
     { label: "Imágenes", value: images, href: "/administracion/productos", icon: ImageIcon },
+    {
+      label: "Reseñas pendientes",
+      value: pendingReviews,
+      href: "/administracion/resenas?estado=PENDING",
+      icon: Star,
+    },
   ];
 
   return (
@@ -29,7 +38,7 @@ export default async function AdministracionPage() {
         <p className="text-sm text-muted-foreground">Resumen general del catálogo.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {stats.map(({ label, value, href, icon: Icon }) => (
           <Link key={label} href={href}>
             <Card className="p-5 transition-colors hover:border-accent">

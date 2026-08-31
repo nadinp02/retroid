@@ -3,14 +3,18 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { getProductBySlug } from "@/services/products";
+import { listApprovedReviews, getReviewSummary } from "@/services/reviews";
 import { buildWhatsAppUrl, buildProductWhatsAppMessage } from "@/lib/whatsapp";
 import { siteConfig } from "@/lib/site-config";
-import { productJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
+import { productJsonLd, breadcrumbJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
 import { formatPrice } from "@/utils/price";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { Badge } from "@/components/ui/badge";
 import { WindowPanel } from "@/components/ui/window-panel";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ProductGallery } from "@/features/products/product-gallery";
+import { ProductTrustStrip } from "@/features/products/product-trust-strip";
+import { ReviewsSection } from "@/features/reviews/reviews-section";
 
 // cache(): dedupea el fetch entre generateMetadata y el componente de
 // página, que corren por separado pero para el mismo request.
@@ -23,6 +27,9 @@ const getProduct = cache(async (slug: string) => {
 });
 
 const DESCRIPTION_MAX_LENGTH = 155;
+// A partir de cuántas unidades restantes el stock deja de mostrarse como
+// "En stock" genérico y pasa a mostrar la cantidad exacta como urgencia.
+const LOW_STOCK_THRESHOLD = 5;
 
 function buildProductDescription(product: { name: string; description: string | null }) {
   if (product.description) {
@@ -52,7 +59,7 @@ export async function generateMetadata({
   const images =
     product.images.length > 0
       ? product.images.map((image) => ({ url: image.url, alt: image.alt ?? product.name }))
-      : [{ url: "/banner.png", width: 1279, height: 929, alt: product.name }];
+      : [{ url: "/banner.jpg", width: 1279, height: 929, alt: product.name }];
 
   return {
     title: product.name,
@@ -86,7 +93,11 @@ export default async function ProductoDetallePage({
     notFound();
   }
 
-  const inStock = product.stock > 0;
+  const [reviewSummary, reviews] = await Promise.all([
+    getReviewSummary(product.id),
+    listApprovedReviews({ productId: product.id }),
+  ]);
+
   const whatsappUrl = buildWhatsAppUrl(
     buildProductWhatsAppMessage({
       name: product.name,
@@ -95,20 +106,43 @@ export default async function ProductoDetallePage({
     }),
   );
 
-  const specs = [
-    { label: "Categoría", value: product.category.name },
-    { label: "Marca", value: product.brand?.name ?? "Sin marca" },
-    { label: "Estado", value: inStock ? "Disponible" : "Sin stock" },
-    { label: "Stock", value: `${product.stock} unidad${product.stock === 1 ? "" : "es"}` },
+  // Mensaje de stock: en vez de exponer el número exacto siempre (que
+  // regala inventario real a mayoristas/competencia), solo se muestra la
+  // cantidad cuando es escasa — ahí sí suma como señal de urgencia legítima.
+  const stockStatus =
+    product.stock <= 0
+      ? { dotClassName: "bg-muted-foreground", label: "Sin stock" }
+      : product.stock <= LOW_STOCK_THRESHOLD
+        ? {
+            dotClassName: "bg-primary",
+            label:
+              product.stock === 1
+                ? "¡Última unidad!"
+                : `¡Últimas ${product.stock} unidades!`,
+          }
+        : { dotClassName: "bg-success", label: "En stock" };
+
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/" },
+    { label: "Productos", href: "/productos" },
+    { label: product.category.name, href: `/productos?categoria=${product.category.slug}` },
+    { label: product.name },
   ];
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={jsonLdScriptProps(productJsonLd(product))}
+        dangerouslySetInnerHTML={jsonLdScriptProps(productJsonLd(product, reviewSummary))}
       />
-      <WindowPanel title="RETROID.EXE" bodyClassName="grid gap-8 p-6 lg:grid-cols-2 lg:gap-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScriptProps(breadcrumbJsonLd(breadcrumbItems))}
+      />
+
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <WindowPanel title="RETROID" bodyClassName="grid gap-8 p-6 lg:grid-cols-2 lg:gap-12">
         <ProductGallery images={product.images} productName={product.name} />
 
         <div className="flex flex-col gap-6">
@@ -118,12 +152,20 @@ export default async function ProductoDetallePage({
               {product.brand ? ` · ${product.brand.name}` : ""}
             </p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{product.name}</h1>
-            <Badge variant={inStock ? "success" : "secondary"}>
-              {inStock ? "Disponible" : "Sin stock"}
-            </Badge>
+            {product.isLimitedEdition && (
+              <div>
+                <Badge variant="accent">Edición limitada</Badge>
+              </div>
+            )}
           </div>
 
-          <p className="font-mono text-4xl font-bold text-primary">{formatPrice(product.price)}</p>
+          <div className="space-y-1.5">
+            <p className="font-mono text-4xl font-bold text-primary">{formatPrice(product.price)}</p>
+            <p className="flex items-center gap-2 font-mono text-xs font-medium tracking-wide uppercase">
+              <span className={`size-2 rounded-full ${stockStatus.dotClassName}`} aria-hidden="true" />
+              {stockStatus.label}
+            </p>
+          </div>
 
           <WhatsAppButton
             url={whatsappUrl}
@@ -138,30 +180,24 @@ export default async function ProductoDetallePage({
             className="w-full text-base sm:w-auto sm:px-10"
           />
 
+          <ProductTrustStrip />
+
           {product.description && (
             <p className="text-pretty leading-relaxed text-muted-foreground">
               {product.description}
             </p>
           )}
-
-          <div className="border border-border">
-            <p className="border-b border-border bg-muted px-3 py-2 font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Información adicional
-            </p>
-            <dl className="divide-y divide-border">
-              {specs.map((spec) => (
-                <div
-                  key={spec.label}
-                  className="flex items-center justify-between px-3 py-2.5 font-mono text-sm"
-                >
-                  <dt className="text-muted-foreground uppercase">{spec.label}</dt>
-                  <dd className="font-medium">{spec.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
         </div>
       </WindowPanel>
+
+      <div className="mt-12 sm:mt-16">
+        <ReviewsSection
+          title="Reseñas de este producto"
+          summary={reviewSummary}
+          reviews={reviews}
+          productId={product.id}
+        />
+      </div>
     </>
   );
 }

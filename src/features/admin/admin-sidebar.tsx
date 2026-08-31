@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Megaphone, Package, Tag, Tags, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, Megaphone, Package, Star, Tag, Tags, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/administracion/productos", label: "Productos", icon: Package, exact: false },
   { href: "/administracion/categorias", label: "Categorías", icon: Tags, exact: false },
   { href: "/administracion/marcas", label: "Marcas", icon: Tag, exact: false },
+  { href: "/administracion/resenas", label: "Reseñas", icon: Star, exact: false },
   { href: "/administracion/usuarios", label: "Usuarios", icon: Users, exact: false },
   { href: "/administracion/anuncio", label: "Anuncio", icon: Megaphone, exact: false },
 ] as const;
