@@ -3,11 +3,7 @@ import { getBrandById } from "@/services/brands";
 import { BrandForm } from "@/features/brands/brand-form";
 import { SectionHeading } from "@/components/ui/section-heading";
 
-export default async function EditarMarcaPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditarMarcaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const brand = await getBrandById(id);
 

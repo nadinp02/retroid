@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # npm ci corre "postinstall" (prisma generate, solo lee
+      # prisma/schema.prisma, no necesita una base real) y "prepare" (husky).
+      # HUSKY=0 se salta la instalación de git hooks: no tiene sentido en
+      # CI, donde no se hacen commits.
+      - run: npm ci
+        env:
+          HUSKY: 0
+
+      - run: npm run format:check
+
+      - run: npm run lint
+
+      - run: npx tsc --noEmit
+
+      - run: npm run test
+
+      # Sin "next build" acá a propósito: el proyecto ya se despliega en
+      # Vercel con preview builds automáticos por PR (ver DEPLOY.md) —
+      # duplicar ese build completo en GitHub Actions no suma nada, y
+      # requeriría además una base de datos Neon real (el adapter
+      # @prisma/adapter-neon no funciona contra un Postgres genérico) solo
+      # para generar sitemap.xml en build time. Este workflow cubre lo que
+      # Vercel no revisa explícitamente como check de PR: lint, tipos y
+      # tests.

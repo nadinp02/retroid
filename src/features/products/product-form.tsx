@@ -120,7 +120,11 @@ export function ProductForm({
 
             <div className="space-y-1.5">
               <Label htmlFor="brandId">Marca</Label>
-              <Select items={brandSelectItems} name="brandId" defaultValue={product?.brandId ?? "none"}>
+              <Select
+                items={brandSelectItems}
+                name="brandId"
+                defaultValue={product?.brandId ?? "none"}
+              >
                 <SelectTrigger id="brandId" className="w-full">
                   <SelectValue placeholder="Sin marca" />
                 </SelectTrigger>

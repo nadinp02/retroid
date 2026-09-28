@@ -5,8 +5,10 @@ const SIZE_CLASSES = { sm: "size-3.5", md: "size-4", lg: "size-6" } as const;
 
 /**
  * Estrellas de solo lectura. Soporta valores fraccionarios (ej. promedios
- * como 4.3) recortando una segunda fila de estrellas llenas por porcentaje
- * sobre una fila base gris — no hace falta media-estrella como asset aparte.
+ * como 4.3): cada estrella calcula su propio porcentaje de relleno (0, 100,
+ * o algo intermedio) y lo recorta con un overlay del mismo tamaño exacto —
+ * a diferencia de recortar la fila completa por ancho, esto no depende de
+ * que los gaps entre estrellas encajen justo en el punto de corte.
  */
 export function StarRating({
   rating,
@@ -18,29 +20,25 @@ export function StarRating({
   className?: string;
 }) {
   const clamped = Math.max(0, Math.min(5, rating));
-  const percent = (clamped / 5) * 100;
   const sizeClass = SIZE_CLASSES[size];
 
   return (
     <div
       role="img"
       aria-label={`${clamped.toFixed(1)} de 5 estrellas`}
-      className={cn("relative inline-flex shrink-0", className)}
+      className={cn("inline-flex shrink-0 gap-0.5", className)}
     >
-      <div className="flex gap-0.5 text-muted-foreground/30" aria-hidden="true">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star key={i} className={cn(sizeClass, "fill-current")} />
-        ))}
-      </div>
-      <div
-        className="absolute inset-0 flex gap-0.5 overflow-hidden text-primary"
-        style={{ width: `${percent}%` }}
-        aria-hidden="true"
-      >
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star key={i} className={cn(sizeClass, "fill-current")} />
-        ))}
-      </div>
+      {Array.from({ length: 5 }).map((_, i) => {
+        const fillPercent = Math.max(0, Math.min(1, clamped - i)) * 100;
+        return (
+          <span key={i} className="relative inline-flex shrink-0" aria-hidden="true">
+            <Star className={cn(sizeClass, "shrink-0 fill-current text-muted-foreground/30")} />
+            <span className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercent}%` }}>
+              <Star className={cn(sizeClass, "shrink-0 fill-current text-primary")} />
+            </span>
+          </span>
+        );
+      })}
     </div>
   );
 }

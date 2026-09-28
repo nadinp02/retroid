@@ -3,15 +3,17 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ImageOff, ArrowLeft, ArrowRight, Star } from "lucide-react";
+import { ImageOff, ArrowLeft, ArrowRight, Star, MousePointerClick } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { FieldError } from "@/components/field-error";
 import {
   createProductImageAction,
   deleteProductImageAction,
   getUploadSignatureAction,
   reorderProductImagesAction,
+  setHoverProductImageAction,
   setPrimaryProductImageAction,
 } from "@/actions/products/images";
 import { MAX_IMAGE_BYTES, MAX_IMAGES_PER_PRODUCT } from "@/lib/image-upload-config";
@@ -19,13 +21,7 @@ import type { ProductImage } from "@/types/catalog";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export function ImageManager({
-  productId,
-  images,
-}: {
-  productId: string;
-  images: ProductImage[];
-}) {
+export function ImageManager({ productId, images }: { productId: string; images: ProductImage[] }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -149,6 +145,21 @@ export function ImageManager({
     }
   }
 
+  async function handleToggleHover(imageId: string) {
+    setPendingId(imageId);
+    setError(null);
+    try {
+      const result = await setHoverProductImageAction(productId, imageId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -172,7 +183,7 @@ export function ImageManager({
         />
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      <FieldError message={error ?? undefined} />
 
       {images.length === 0 ? (
         <p className="border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -195,13 +206,14 @@ export function ImageManager({
                     fill
                     sizes="200px"
                     className="object-cover"
-                    onError={() =>
-                      setBrokenIds((prev) => new Set(prev).add(image.id))
-                    }
+                    onError={() => setBrokenIds((prev) => new Set(prev).add(image.id))}
                   />
                 )}
-                {index === 0 && (
-                  <Badge className="absolute left-1 top-1">Principal</Badge>
+                {index === 0 && <Badge className="absolute left-1 top-1">Principal</Badge>}
+                {image.isHoverImage && (
+                  <Badge variant="accent" className="absolute top-1 right-1">
+                    Hover
+                  </Badge>
                 )}
               </div>
               <div className="flex items-center justify-between gap-1">
@@ -237,6 +249,25 @@ export function ImageManager({
                   title="Marcar como principal"
                 >
                   <Star className="size-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant={image.isHoverImage ? "accent" : "outline"}
+                  size="icon-sm"
+                  disabled={pendingId === image.id || index === 0}
+                  onClick={() => handleToggleHover(image.id)}
+                  aria-label={
+                    image.isHoverImage
+                      ? "Quitar como imagen de hover"
+                      : "Marcar como imagen de hover (se muestra en la card al pasar el mouse)"
+                  }
+                  title={
+                    image.isHoverImage
+                      ? "Quitar como imagen de hover"
+                      : "Marcar como imagen de hover"
+                  }
+                >
+                  <MousePointerClick className="size-3.5" />
                 </Button>
               </div>
               <ConfirmDialog

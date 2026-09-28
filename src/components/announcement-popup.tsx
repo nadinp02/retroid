@@ -22,7 +22,11 @@ function dismissKey(announcement: AnnouncementPopupData) {
   return `retroid-announcement-dismissed-${announcement.id}-${announcement.version}`;
 }
 
-export function AnnouncementPopup({ announcement }: { announcement: AnnouncementPopupData | null }) {
+export function AnnouncementPopup({
+  announcement,
+}: {
+  announcement: AnnouncementPopupData | null;
+}) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -41,7 +45,9 @@ export function AnnouncementPopup({ announcement }: { announcement: Announcement
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 fixed right-3 bottom-3 z-50 w-[calc(100vw-1.5rem)] max-w-64 duration-300">
+    // bottom-24: deja lugar debajo para el botón flotante de WhatsApp
+    // (WhatsAppFloatButton, fixed en la misma esquina) sin que se pisen.
+    <div className="animate-in fade-in slide-in-from-bottom-4 fixed right-3 bottom-24 z-50 w-[calc(100vw-1.5rem)] max-w-64 duration-300 sm:right-4 sm:bottom-28">
       <WindowPanel
         title={announcement.title}
         bodyClassName="space-y-2 p-3"

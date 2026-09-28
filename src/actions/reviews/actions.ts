@@ -1,6 +1,6 @@
 "use server";
 
-import { z } from "zod";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { ReviewStatus } from "@prisma/client";
 import { requireSession } from "@/auth";
@@ -12,26 +12,11 @@ import {
   getReviewById,
 } from "@/services/reviews";
 import { getProductById } from "@/services/products";
-import type { FormState } from "@/types/form-state";
+import { emptyFormState, type FormState } from "@/types/form-state";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { reviewSchema } from "./schema";
 
-const reviewSchema = z.object({
-  authorName: z.string().trim().min(2, "Contanos tu nombre (mínimo 2 caracteres)").max(80),
-  rating: z.coerce
-    .number({ message: "Elegí una calificación de 1 a 5 estrellas" })
-    .int()
-    .min(1, "Elegí una calificación de 1 a 5 estrellas")
-    .max(5, "Elegí una calificación de 1 a 5 estrellas"),
-  comment: z
-    .string()
-    .trim()
-    .max(1000, "El comentario es demasiado largo")
-    .nullish()
-    .transform((value) => (value ? value : null)),
-  productId: z
-    .string()
-    .nullish()
-    .transform((value) => (value && value.trim() !== "" && value !== "general" ? value : null)),
-});
+const REVIEW_RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 
 /**
  * Revalida las páginas públicas donde puede impactar un cambio de estado o
@@ -52,11 +37,19 @@ export async function createReviewAction(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  const ip = getClientIp(await headers());
+  if (!(await checkRateLimit(`review:${ip}`, REVIEW_RATE_LIMIT))) {
+    return { errors: { _form: ["Demasiados intentos. Probá de nuevo en un minuto."] } };
+  }
+
   // Honeypot: campo oculto para bots (invisible y fuera del tab-order para
   // usuarios reales). Si viene con contenido, fingimos éxito sin guardar
   // nada — no le damos a un bot ninguna pista de que fue detectado.
   if (typeof formData.get("website") === "string" && formData.get("website") !== "") {
-    return { errors: {}, success: "¡Gracias! Tu reseña fue enviada y va a publicarse luego de ser revisada." };
+    return {
+      errors: {},
+      success: "¡Gracias! Tu reseña fue enviada y va a publicarse luego de ser revisada.",
+    };
   }
 
   const parsed = reviewSchema.safeParse({
@@ -109,10 +102,15 @@ export async function replyToReviewAction(id: string, formData: FormData) {
   revalidatePublicPages(review.product?.slug);
 }
 
-export async function deleteReviewAction(id: string) {
+export async function deleteReviewAction(
+  id: string,
+  _prevState: FormState,
+  _formData: FormData,
+): Promise<FormState> {
   await requireSession();
   const review = await getReviewById(id);
   await deleteReview(id);
   revalidatePath("/administracion/resenas");
   revalidatePublicPages(review?.product?.slug);
+  return emptyFormState;
 }

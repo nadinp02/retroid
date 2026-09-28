@@ -14,6 +14,14 @@ const eslintConfig = [
   {
     ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"],
   },
+  {
+    rules: {
+      // El proyecto prefija con "_" los parámetros que una función debe
+      // aceptar por contrato (ej. useActionState siempre pasa prevState y
+      // formData) pero no usa en ese caso puntual.
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    },
+  },
 ];
 
 export default eslintConfig;

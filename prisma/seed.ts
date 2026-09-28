@@ -1,6 +1,5 @@
 import { prisma } from "../src/lib/prisma";
 import { hashPassword } from "../src/lib/password";
-import { Role } from "../src/types/role";
 
 async function seedAdmin() {
   const password = await hashPassword("123456");
@@ -12,7 +11,6 @@ async function seedAdmin() {
       email: "admin@admin.com",
       password,
       name: "Admin",
-      role: Role.ADMIN,
     },
   });
 }
@@ -100,7 +98,8 @@ async function seedCatalog() {
     {
       name: "Nintendo DSi XL Bordó",
       slug: "nintendo-dsi-xl-bordo",
-      description: "Nintendo DSi XL bordó, pantallas grandes, ideal para lectura y juego prolongado.",
+      description:
+        "Nintendo DSi XL bordó, pantallas grandes, ideal para lectura y juego prolongado.",
       price: "90000.00",
       stock: 2,
       sku: "NDSI-XL-BD",
@@ -190,7 +189,8 @@ async function seedCatalog() {
     {
       name: "Travel Case Retroid Amarilla",
       slug: "travel-case-retroid-amarilla",
-      description: "Estuche de viaje rígido, línea Retroid, color amarillo. Guarda consola + cartuchos.",
+      description:
+        "Estuche de viaje rígido, línea Retroid, color amarillo. Guarda consola + cartuchos.",
       price: "13000.00",
       stock: 10,
       sku: "CASE-RETROID-AM",
@@ -200,7 +200,8 @@ async function seedCatalog() {
     {
       name: "Travel Case Retroid Negra",
       slug: "travel-case-retroid-negra",
-      description: "Estuche de viaje rígido, línea Retroid, color negro. Guarda consola + cartuchos.",
+      description:
+        "Estuche de viaje rígido, línea Retroid, color negro. Guarda consola + cartuchos.",
       price: "13000.00",
       stock: 10,
       sku: "CASE-RETROID-NG",

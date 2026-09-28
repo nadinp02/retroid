@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidateTag } from "next/cache";
 import { requireSession } from "@/auth";
@@ -10,7 +11,7 @@ import {
   deleteCategory,
   getCategoryBySlug,
 } from "@/services/categories";
-import type { FormState } from "@/types/form-state";
+import { emptyFormState, type FormState } from "@/types/form-state";
 import { SLUG_REGEX, SLUG_ERROR_MESSAGE } from "@/utils/slug";
 
 const categorySchema = z.object({
@@ -70,8 +71,26 @@ export async function updateCategoryAction(
   redirect("/administracion/categorias");
 }
 
-export async function deleteCategoryAction(id: string) {
+export async function deleteCategoryAction(
+  id: string,
+  _prevState: FormState,
+  _formData: FormData,
+): Promise<FormState> {
   await requireSession();
-  await deleteCategory(id);
+
+  try {
+    await deleteCategory(id);
+  } catch (error) {
+    // P2003 = violación de FK: la categoría tiene productos asociados
+    // (products.categoryId -> categories.id es ON DELETE RESTRICT).
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      return {
+        errors: { _form: ["No se puede eliminar: hay productos asociados a esta categoría."] },
+      };
+    }
+    throw error;
+  }
+
   revalidateTag("categories");
+  return emptyFormState;
 }

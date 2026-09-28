@@ -14,12 +14,7 @@ export function WhatsAppButton({ url, label, event, ...buttonProps }: WhatsAppBu
   return (
     <Button
       render={
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => trackEvent(event)}
-        >
+        <a href={url} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent(event)}>
           {label}
         </a>
       }

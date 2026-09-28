@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidateTag } from "next/cache";
 import { requireSession } from "@/auth";
 import { createBrand, updateBrand, deleteBrand, getBrandBySlug } from "@/services/brands";
-import type { FormState } from "@/types/form-state";
+import { emptyFormState, type FormState } from "@/types/form-state";
 import { SLUG_REGEX, SLUG_ERROR_MESSAGE } from "@/utils/slug";
 
 const brandSchema = z.object({
@@ -65,8 +65,16 @@ export async function updateBrandAction(
   redirect("/administracion/marcas");
 }
 
-export async function deleteBrandAction(id: string) {
+export async function deleteBrandAction(
+  id: string,
+  _prevState: FormState,
+  _formData: FormData,
+): Promise<FormState> {
   await requireSession();
+  // products.brandId es opcional (Product.brandId String?), así que la FK es
+  // ON DELETE SET NULL: a diferencia de categorías, acá no hay excepción de
+  // integridad referencial que capturar.
   await deleteBrand(id);
   revalidateTag("brands");
+  return emptyFormState;
 }

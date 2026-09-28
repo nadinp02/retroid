@@ -8,7 +8,10 @@ import { WhatsAppButton } from "@/components/whatsapp-button";
 import type { ProductWithRelations } from "@/types/catalog";
 
 export function ProductCard({ product }: { product: ProductWithRelations }) {
-  const coverImage = product.images[0];
+  // PRODUCT_CARD_RELATIONS ya trae como mucho 2 imágenes: portada
+  // (position 0) y, si existe, la marcada como hover — independiente de su
+  // posición real en la galería completa del producto.
+  const [coverImage, hoverImage] = product.images;
   const productUrl = `${siteConfig.url}/productos/${product.slug}`;
   const whatsappUrl = buildWhatsAppUrl(
     buildProductWhatsAppMessage({ name: product.name, price: product.price, url: productUrl }),
@@ -19,20 +22,34 @@ export function ProductCard({ product }: { product: ProductWithRelations }) {
       <Link href={`/productos/${product.slug}`} className="flex flex-1 flex-col">
         <div className="relative aspect-square w-full overflow-hidden border-b border-border bg-muted">
           {coverImage ? (
-            <Image
-              src={coverImage.url}
-              alt={coverImage.alt ?? product.name}
-              fill
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className="object-cover"
-            />
+            <>
+              <Image
+                src={coverImage.url}
+                alt={coverImage.alt ?? product.name}
+                fill
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                className={`object-cover ${hoverImage ? "transition-opacity duration-300 ease-out group-hover:opacity-0" : ""}`}
+              />
+              {/* Sin JS: :hover del contenedor alcanza directo (no existe en
+                  mobile, así que ahí queda siempre la portada, tal como se
+                  pidió). Independiente de la galería completa del detalle. */}
+              {hoverImage && (
+                <Image
+                  src={hoverImage.url}
+                  alt={hoverImage.alt ?? product.name}
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                  className="object-cover opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
+                />
+              )}
+            </>
           ) : (
             <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
               Sin imagen
             </div>
           )}
         </div>
-        <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <div className="flex flex-1 flex-col gap-2 p-4">
           <p className="font-mono text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase">
             {product.category.name}
           </p>

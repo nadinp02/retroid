@@ -37,7 +37,13 @@ export function ConfirmDialog({
         <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>{description}</AlertDialogDescription>
         <AlertDialogFooter>
-          <AlertDialogClose render={<Button variant="outline" size="sm">Cancelar</Button>} />
+          <AlertDialogClose
+            render={
+              <Button variant="outline" size="sm">
+                Cancelar
+              </Button>
+            }
+          />
           <AlertDialogClose
             render={
               <Button variant="destructive" size="sm" onClick={onConfirm}>

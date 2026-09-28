@@ -82,7 +82,7 @@ export function ProductFilters({
                     categoria: !value || value === ALL_VALUE ? undefined : value,
                     marca: selectedBrand,
                     q: search,
-                  })
+                  }),
                 )
               }
             >
@@ -110,7 +110,7 @@ export function ProductFilters({
                     categoria: selectedCategory,
                     marca: !value || value === ALL_VALUE ? undefined : value,
                     q: search,
-                  })
+                  }),
                 )
               }
             >

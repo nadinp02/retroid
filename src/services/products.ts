@@ -14,12 +14,19 @@ const PRODUCT_LIST_RELATIONS = {
   brand: true,
 };
 
-// Card pública (home, /productos): solo pinta la portada, trae 1 imagen en
-// vez de la relación completa.
+// Card pública (home, /productos): trae como mucho 2 imágenes — la portada
+// (position 0) y, si existe, la marcada como hover (independiente de su
+// posición real en la galería completa) — para el crossfade sutil de
+// ProductCard. orderBy position asc garantiza que la portada quede primera
+// incluso si isHoverImage está en una posición anterior.
 const PRODUCT_CARD_RELATIONS = {
   category: true,
   brand: true,
-  images: { orderBy: { position: "asc" as const }, take: 1 },
+  images: {
+    where: { OR: [{ position: 0 }, { isHoverImage: true }] },
+    orderBy: { position: "asc" as const },
+    take: 2,
+  },
 };
 
 // Detalle de producto y editor de imágenes en admin: necesitan la galería
@@ -184,4 +191,25 @@ export function reorderProductImages(orderedIds: string[]) {
       prisma.productImage.update({ where: { id }, data: { position } }),
     ),
   );
+}
+
+/**
+ * Marca `imageId` como la segunda imagen (hover) del producto en las cards
+ * del catálogo, o la desmarca si ya lo era (toggle). Como mucho una imagen
+ * por producto puede tener `isHoverImage: true` — se garantiza acá, a nivel
+ * app, en vez de con una constraint de DB (misma lógica ya usada para
+ * "principal" vía position).
+ */
+export async function setHoverProductImage(productId: string, imageId: string) {
+  const image = await prisma.productImage.findUnique({
+    where: { id: imageId },
+    select: { isHoverImage: true },
+  });
+
+  await prisma.$transaction([
+    prisma.productImage.updateMany({ where: { productId }, data: { isHoverImage: false } }),
+    ...(image?.isHoverImage
+      ? []
+      : [prisma.productImage.update({ where: { id: imageId }, data: { isHoverImage: true } })]),
+  ]);
 }

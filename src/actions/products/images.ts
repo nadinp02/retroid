@@ -14,6 +14,7 @@ import {
   deleteProductImage,
   getProductById,
   reorderProductImages,
+  setHoverProductImage,
 } from "@/services/products";
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -97,6 +98,18 @@ export async function reorderProductImagesAction(
   await requireSession();
 
   await reorderProductImages(orderedIds);
+  revalidatePath(`/administracion/productos/${productId}/editar`);
+  revalidatePath("/productos");
+  return { ok: true, data: null };
+}
+
+export async function setHoverProductImageAction(
+  productId: string,
+  imageId: string,
+): Promise<ActionResult<null>> {
+  await requireSession();
+
+  await setHoverProductImage(productId, imageId);
   revalidatePath(`/administracion/productos/${productId}/editar`);
   revalidatePath("/productos");
   return { ok: true, data: null };

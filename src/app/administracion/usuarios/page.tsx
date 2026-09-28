@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { WindowPanel } from "@/components/ui/window-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { listUsers } from "@/services/users";
@@ -18,9 +17,7 @@ export default async function UsuariosPage() {
     <div className="space-y-8">
       <div className="space-y-1">
         <SectionHeading>Usuarios</SectionHeading>
-        <p className="text-sm text-muted-foreground">
-          Cuentas con acceso al panel administrativo.
-        </p>
+        <p className="text-sm text-muted-foreground">Cuentas con acceso al panel administrativo.</p>
       </div>
 
       <WindowPanel title="USUARIOS" bodyClassName="p-4">
@@ -30,7 +27,6 @@ export default async function UsuariosPage() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
                 <TableHead className="hidden sm:table-cell">Alta</TableHead>
               </TableRow>
             </TableHeader>
@@ -39,11 +35,6 @@ export default async function UsuariosPage() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === "ADMIN" ? "accent" : "secondary"}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
                     {new Intl.DateTimeFormat("es-AR").format(user.createdAt)}
                   </TableCell>

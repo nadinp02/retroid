@@ -11,16 +11,11 @@ import { emptyFormState } from "@/types/form-state";
 import type { Category } from "@/types/catalog";
 
 export function CategoryForm({ category }: { category?: Category }) {
-  const action = category
-    ? updateCategoryAction.bind(null, category.id)
-    : createCategoryAction;
+  const action = category ? updateCategoryAction.bind(null, category.id) : createCategoryAction;
   const [state, formAction] = useActionState(action, emptyFormState);
 
   return (
-    <WindowPanel
-      title={category ? "EDITAR CATEGORIA" : "NUEVA CATEGORIA"}
-      className="max-w-md"
-    >
+    <WindowPanel title={category ? "EDITAR CATEGORIA" : "NUEVA CATEGORIA"} className="max-w-md">
       <div className="p-5">
         <form action={formAction} className="space-y-5">
           <NameSlugFields

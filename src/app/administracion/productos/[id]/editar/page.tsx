@@ -6,11 +6,7 @@ import { ProductForm } from "@/features/products/product-form";
 import { ImageManager } from "@/features/products/product-images/image-manager";
 import { SectionHeading } from "@/components/ui/section-heading";
 
-export default async function EditarProductoPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditarProductoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [product, categories, brands] = await Promise.all([
     getProductById(id),

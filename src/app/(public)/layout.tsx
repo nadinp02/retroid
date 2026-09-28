@@ -4,19 +4,18 @@ import { MessageCircle } from "lucide-react";
 import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
 import { siteConfig } from "@/lib/site-config";
 import { WhatsAppButton } from "@/components/whatsapp-button";
+import { WhatsAppFloatButton } from "@/components/whatsapp-float-button";
 import { AnnouncementPopup } from "@/components/announcement-popup";
 import { AnnouncementMarquee } from "@/components/announcement-marquee";
 import { MobileNav } from "@/components/mobile-nav";
 import { ProductsNavMenu } from "@/components/products-nav-menu";
+import { InstagramIcon } from "@/components/icons/instagram-icon";
 import { getActiveAnnouncement } from "@/services/announcements";
 import { listCategories } from "@/services/categories";
 
 function Wordmark({ className }: { className?: string }) {
   return (
-    <Link
-      href="/"
-      className={`font-mono text-base font-bold tracking-tight ${className ?? ""}`}
-    >
+    <Link href="/" className={`font-mono text-base font-bold tracking-tight ${className ?? ""}`}>
       RETRO<span className="text-accent">ID</span>
     </Link>
   );
@@ -76,57 +75,43 @@ export default async function PublicLayout({ children }: { children: ReactNode }
       </main>
 
       <footer className="border-t border-border bg-[#0d0d0f]/60">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-          <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
+        {/* pb-20: deja lugar debajo del último renglón para que
+            WhatsAppFloatButton (fixed, misma esquina) no lo tape al llegar
+            al final de la página. */}
+        <div className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6">
+          <div className="flex flex-col gap-10 sm:flex-row sm:gap-24">
             <div className="max-w-xs space-y-3">
               <Wordmark />
               <p className="text-sm text-muted-foreground">
                 Nintendo DS, 3DS y accesorios seleccionados. Importados desde Japón.
               </p>
+              {siteConfig.instagramUrl && (
+                <a
+                  href={siteConfig.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="flex size-8 items-center justify-center border border-border text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                >
+                  <InstagramIcon className="size-4" />
+                </a>
+              )}
             </div>
 
-            <div className="flex gap-12 sm:gap-16">
-              <div className="space-y-3">
-                <p className="font-mono text-xs font-semibold tracking-wide uppercase">
-                  Explorar
-                </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>
-                    <Link href="/productos" className="transition-colors hover:text-accent">
-                      Productos
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="space-y-3">
-                <p className="font-mono text-xs font-semibold tracking-wide uppercase">
-                  Contacto
-                </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>
-                    <WhatsAppButton
-                      url={generalWhatsAppUrl}
-                      label="WhatsApp"
-                      event={generalEvent}
-                      variant="ghost"
-                      className="h-auto p-0 font-normal normal-case text-muted-foreground hover:bg-transparent hover:text-accent"
-                    />
-                  </li>
-                  {siteConfig.instagramUrl && (
-                    <li>
-                      <a
-                        href={siteConfig.instagramUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="transition-colors hover:text-accent"
-                      >
-                        Instagram
-                      </a>
-                    </li>
-                  )}
-                </ul>
-              </div>
+            <div className="space-y-3">
+              <p className="font-mono text-xs font-semibold tracking-wide uppercase">Explorar</p>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <Link href="/" className="transition-colors hover:text-accent">
+                    Inicio
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/productos" className="transition-colors hover:text-accent">
+                    Productos
+                  </Link>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -151,6 +136,8 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           }}
         />
       )}
+
+      <WhatsAppFloatButton url={generalWhatsAppUrl} />
     </div>
   );
 }

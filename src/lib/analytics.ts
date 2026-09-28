@@ -5,7 +5,8 @@
 export type AnalyticsEvent =
   | { name: "whatsapp_click_card"; productId: string; productSlug: string }
   | { name: "whatsapp_click_detail"; productId: string; productSlug: string }
-  | { name: "whatsapp_click_general" };
+  | { name: "whatsapp_click_general" }
+  | { name: "whatsapp_click_float" };
 
 export function trackEvent(event: AnalyticsEvent) {
   if (process.env.NODE_ENV !== "production") {

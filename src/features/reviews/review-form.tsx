@@ -33,7 +33,13 @@ export function ReviewForm({
 
   if (state.success) {
     return (
-      <div className="flex items-start gap-3 border border-primary/40 bg-primary/10 p-5 text-sm">
+      // role="status" (aria-live="polite" implícito): reemplaza el
+      // formulario entero al enviarse, un usuario de lector de pantalla
+      // necesita que se le anuncie el resultado.
+      <div
+        role="status"
+        className="flex items-start gap-3 border border-primary/40 bg-primary/10 p-5 text-sm"
+      >
         <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
         <p>{state.success}</p>
       </div>
@@ -96,6 +102,7 @@ export function ReviewForm({
         <FieldError message={state.errors.comment?.[0]} />
       </div>
 
+      <FieldError message={state.errors._form?.[0]} />
       <SubmitButton className="w-full sm:w-auto">Enviar reseña</SubmitButton>
     </form>
   );

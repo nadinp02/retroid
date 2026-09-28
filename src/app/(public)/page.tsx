@@ -15,6 +15,7 @@ import { GlitchText } from "@/components/glitch-text";
 import { BenefitsStrip } from "@/components/benefits-strip";
 import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
 import { organizationJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
+import { getNonce } from "@/lib/nonce";
 
 // Sin searchParams/params, Next.js pre-renderizaría esta página como
 // estática en build time. Forzamos render dinámico para que siempre
@@ -74,6 +75,7 @@ export default async function HomePage() {
     reviewSummary,
     reviews,
     productOptions,
+    nonce,
   ] = await Promise.all([
     listPublicProducts({ pageSize: 4 }),
     listPublicProducts({ pageSize: 4, isLimitedEdition: true }),
@@ -81,6 +83,7 @@ export default async function HomePage() {
     getReviewSummary(),
     listApprovedReviews({ pageSize: 6 }),
     listProductOptions(),
+    getNonce(),
   ]);
 
   const whatsappUrl = buildWhatsAppUrl(buildGeneralWhatsAppMessage());
@@ -89,6 +92,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={jsonLdScriptProps(organizationJsonLd())}
       />
 
@@ -117,7 +121,8 @@ export default async function HomePage() {
             Historias que siguen <GlitchText>en juego</GlitchText>.
           </h1>
           <p className="max-w-md text-balance text-base text-white/80 sm:text-lg">
-            Nintendo DS, 3DS, accesorios y ediciones difíciles de conseguir, seleccionadas una por una.
+            Nintendo DS, 3DS, accesorios y ediciones difíciles de conseguir, seleccionadas una por
+            una.
           </p>
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <Button size="lg" render={<Link href="/productos">Ver catálogo</Link>} />
@@ -180,7 +185,9 @@ export default async function HomePage() {
                 <SectionHeading as="h2" size="md" variant="display">
                   Últimos ingresos
                 </SectionHeading>
-                <p className="text-sm text-muted-foreground">Lo más nuevo que sumamos al catálogo.</p>
+                <p className="text-sm text-muted-foreground">
+                  Lo más nuevo que sumamos al catálogo.
+                </p>
               </div>
               <Link
                 href="/productos"

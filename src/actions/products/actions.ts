@@ -1,6 +1,5 @@
 "use server";
 
-import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/auth";
@@ -12,44 +11,8 @@ import {
   bulkUpdateProducts,
   getProductBySlug,
 } from "@/services/products";
-import type { FormState } from "@/types/form-state";
-import { SLUG_REGEX, SLUG_ERROR_MESSAGE } from "@/utils/slug";
-
-const productSchema = z.object({
-  name: z.string().trim().min(1, "El nombre es obligatorio"),
-  slug: z.string().trim().min(1, "El slug es obligatorio").regex(SLUG_REGEX, SLUG_ERROR_MESSAGE),
-  description: z
-    .string()
-    .trim()
-    .nullish()
-    .transform((value) => (value ? value : undefined)),
-  price: z.coerce.number({ message: "El precio es obligatorio" }).positive("El precio debe ser mayor a 0"),
-  stock: z.coerce
-    .number({ message: "El stock es obligatorio" })
-    .int("El stock debe ser un número entero")
-    .nonnegative("El stock no puede ser negativo"),
-  isActive: z.boolean(),
-  isLimitedEdition: z.boolean(),
-  categoryId: z.string().trim().min(1, "La categoría es obligatoria"),
-  brandId: z
-    .string()
-    .nullish()
-    .transform((value) => (value && value.trim() !== "" && value !== "none" ? value : null)),
-});
-
-function parseProductForm(formData: FormData) {
-  return productSchema.safeParse({
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    description: formData.get("description"),
-    price: formData.get("price"),
-    stock: formData.get("stock"),
-    isActive: formData.get("isActive") === "on",
-    isLimitedEdition: formData.get("isLimitedEdition") === "on",
-    categoryId: formData.get("categoryId"),
-    brandId: formData.get("brandId"),
-  });
-}
+import { emptyFormState, type FormState } from "@/types/form-state";
+import { parseProductForm } from "./schema";
 
 export async function createProductAction(
   _prevState: FormState,
@@ -94,10 +57,15 @@ export async function updateProductAction(
   redirect("/administracion/productos");
 }
 
-export async function deleteProductAction(id: string) {
+export async function deleteProductAction(
+  id: string,
+  _prevState: FormState,
+  _formData: FormData,
+): Promise<FormState> {
   await requireSession();
   await deleteProduct(id);
   revalidatePath("/administracion/productos");
+  return emptyFormState;
 }
 
 export async function bulkDeleteProductsAction(ids: string[]) {

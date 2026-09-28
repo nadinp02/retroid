@@ -9,23 +9,21 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  OPERATOR
-}
-
 enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
 }
 
+// Sin roles/permisos: solo el dueño del negocio y el desarrollador acceden
+// al panel, y ambos necesitan acceso completo. Existió un enum Role
+// (ADMIN/OPERATOR) que nunca se usaba para restringir nada — se sacó en vez
+// de dejar RBAC a medio implementar sin necesidad comercial real.
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String?
-  role      Role     @default(OPERATOR)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -104,14 +102,20 @@ model Announcement {
 }
 
 model ProductImage {
-  id        String   @id @default(cuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  publicId  String
-  url       String
-  alt       String?
-  position  Int      @default(0)
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  publicId     String
+  url          String
+  alt          String?
+  position     Int      @default(0)
+  // Segunda imagen que se muestra al hacer hover sobre la card del catálogo
+  // (ver ProductCard). Independiente de `position`/la galería completa: como
+  // mucho una imagen por producto tiene esto en true, se aplica a nivel app
+  // en setHoverProductImage (unset-all + set), no hay constraint de DB —
+  // mismo criterio ya usado para "principal" (posición 0).
+  isHoverImage Boolean  @default(false)
+  createdAt    DateTime @default(now())
 
   @@index([productId, position])
   @@map("product_images")
@@ -137,4 +141,38 @@ model Review {
   @@index([status])
   @@index([productId])
   @@map("reviews")
+}
+
+// Frases de la barra promocional debajo del navbar (ver
+// AnnouncementMarquee) — antes hardcodeadas en el componente. `position`
+// define el orden de aparición; `isActive` permite ocultar una frase sin
+// borrarla.
+model MarqueeItem {
+  id        String   @id @default(cuid())
+  text      String
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("marquee_items")
+}
+
+// Soporte para el rate limiting de login y alta de reseñas (ver
+// src/lib/rate-limit.ts). Un Map en memoria no sirve en Vercel: cada
+// instancia serverless tiene su propio proceso, así que bajo tráfico
+// concurrente cada una llevaría su propio contador, y cada deploy/reciclado
+// de instancia lo reiniciaría a cero.
+//
+// Un contador por key (no una fila por intento, como en el diseño
+// anterior): permite hacer el incremento + reset-si-venció con un único
+// UPSERT atómico en Postgres (INSERT ... ON CONFLICT DO UPDATE), sin
+// condición de carrera entre leer y escribir. Ver checkRateLimit().
+model RateLimitBucket {
+  key     String   @id
+  count   Int      @default(1)
+  resetAt DateTime
+
+  @@map("rate_limit_buckets")
 }

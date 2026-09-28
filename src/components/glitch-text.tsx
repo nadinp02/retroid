@@ -28,13 +28,19 @@ export function GlitchText({ children, className }: { children: string; classNam
     let delayTimer: ReturnType<typeof setTimeout>;
 
     function scheduleGlitch() {
-      delayTimer = setTimeout(() => {
-        setIsGlitching(true);
-        durationTimer = setTimeout(() => {
-          setIsGlitching(false);
-          scheduleGlitch();
-        }, randomBetween(MIN_DURATION_MS, MAX_DURATION_MS));
-      }, randomBetween(MIN_DELAY_MS, MAX_DELAY_MS));
+      delayTimer = setTimeout(
+        () => {
+          setIsGlitching(true);
+          durationTimer = setTimeout(
+            () => {
+              setIsGlitching(false);
+              scheduleGlitch();
+            },
+            randomBetween(MIN_DURATION_MS, MAX_DURATION_MS),
+          );
+        },
+        randomBetween(MIN_DELAY_MS, MAX_DELAY_MS),
+      );
     }
 
     scheduleGlitch();

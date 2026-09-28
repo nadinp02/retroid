@@ -18,7 +18,12 @@ export default async function AdministracionPage() {
     countReviewsByStatus(ReviewStatus.PENDING),
   ]);
 
-  const stats: { label: string; value: number; href: string; icon: ComponentType<{ className?: string }> }[] = [
+  const stats: {
+    label: string;
+    value: number;
+    href: string;
+    icon: ComponentType<{ className?: string }>;
+  }[] = [
     { label: "Productos", value: products, href: "/administracion/productos", icon: Package },
     { label: "Categorías", value: categories, href: "/administracion/categorias", icon: Tags },
     { label: "Marcas", value: brands, href: "/administracion/marcas", icon: Tag },

@@ -7,6 +7,7 @@ import { listApprovedReviews, getReviewSummary } from "@/services/reviews";
 import { buildWhatsAppUrl, buildProductWhatsAppMessage } from "@/lib/whatsapp";
 import { siteConfig } from "@/lib/site-config";
 import { productJsonLd, breadcrumbJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
+import { getNonce } from "@/lib/nonce";
 import { formatPrice } from "@/utils/price";
 import { WhatsAppButton } from "@/components/whatsapp-button";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +88,7 @@ export default async function ProductoDetallePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const [product, nonce] = await Promise.all([getProduct(slug), getNonce()]);
 
   if (!product) {
     notFound();
@@ -115,10 +116,7 @@ export default async function ProductoDetallePage({
       : product.stock <= LOW_STOCK_THRESHOLD
         ? {
             dotClassName: "bg-primary",
-            label:
-              product.stock === 1
-                ? "¡Última unidad!"
-                : `¡Últimas ${product.stock} unidades!`,
+            label: product.stock === 1 ? "¡Última unidad!" : `¡Últimas ${product.stock} unidades!`,
           }
         : { dotClassName: "bg-success", label: "En stock" };
 
@@ -133,19 +131,24 @@ export default async function ProductoDetallePage({
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={jsonLdScriptProps(productJsonLd(product, reviewSummary))}
       />
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={jsonLdScriptProps(breadcrumbJsonLd(breadcrumbItems))}
       />
 
       <Breadcrumbs items={breadcrumbItems} />
 
-      <WindowPanel title="RETROID" bodyClassName="grid gap-8 p-6 lg:grid-cols-2 lg:gap-12">
+      <WindowPanel
+        title="RETROID"
+        bodyClassName="grid gap-8 p-6 lg:grid-cols-2 lg:gap-12 lg:items-start"
+      >
         <ProductGallery images={product.images} productName={product.name} />
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
           <div className="space-y-3">
             <p className="font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase">
               {product.category.name}
@@ -160,27 +163,38 @@ export default async function ProductoDetallePage({
           </div>
 
           <div className="space-y-1.5">
-            <p className="font-mono text-4xl font-bold text-primary">{formatPrice(product.price)}</p>
+            <p className="font-mono text-4xl font-bold text-primary">
+              {formatPrice(product.price)}
+            </p>
             <p className="flex items-center gap-2 font-mono text-xs font-medium tracking-wide uppercase">
-              <span className={`size-2 rounded-full ${stockStatus.dotClassName}`} aria-hidden="true" />
+              <span
+                className={`size-2 rounded-full ${stockStatus.dotClassName}`}
+                aria-hidden="true"
+              />
               {stockStatus.label}
             </p>
           </div>
 
-          <WhatsAppButton
-            url={whatsappUrl}
-            label={
-              <>
-                <MessageCircle className="size-5" />
-                Comprar por WhatsApp
-              </>
-            }
-            event={{ name: "whatsapp_click_detail", productId: product.id, productSlug: product.slug }}
-            size="lg"
-            className="w-full text-base sm:w-auto sm:px-10"
-          />
+          <div className="space-y-4">
+            <WhatsAppButton
+              url={whatsappUrl}
+              label={
+                <>
+                  <MessageCircle className="size-5" />
+                  Comprar por WhatsApp
+                </>
+              }
+              event={{
+                name: "whatsapp_click_detail",
+                productId: product.id,
+                productSlug: product.slug,
+              }}
+              size="lg"
+              className="w-full text-base sm:w-auto sm:px-10"
+            />
 
-          <ProductTrustStrip />
+            <ProductTrustStrip />
+          </div>
 
           {product.description && (
             <p className="text-pretty leading-relaxed text-muted-foreground">

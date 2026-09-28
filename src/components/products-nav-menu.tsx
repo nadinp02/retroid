@@ -2,13 +2,24 @@
 
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { Menu, MenuTrigger, MenuPortal, MenuPositioner, MenuPopup, MenuLinkItem } from "@/components/ui/menu";
+import {
+  Menu,
+  MenuTrigger,
+  MenuPortal,
+  MenuPositioner,
+  MenuPopup,
+  MenuLinkItem,
+} from "@/components/ui/menu";
 import type { Category } from "@/types/catalog";
 
 // Dropdown "Productos" del navbar de escritorio: se abre con click u hover
 // y lista las categorías reales (administradas desde el backoffice) para
 // no duplicar taxonomía hardcodeada acá.
-export function ProductsNavMenu({ categories }: { categories: Pick<Category, "id" | "name" | "slug">[] }) {
+export function ProductsNavMenu({
+  categories,
+}: {
+  categories: Pick<Category, "id" | "name" | "slug">[];
+}) {
   return (
     <Menu>
       <MenuTrigger
@@ -24,9 +35,7 @@ export function ProductsNavMenu({ categories }: { categories: Pick<Category, "id
         <MenuPositioner>
           <MenuPopup>
             <MenuLinkItem render={<Link href="/productos">Ver todo</Link>} closeOnClick />
-            {categories.length > 0 && (
-              <div className="my-1 h-px bg-border" aria-hidden="true" />
-            )}
+            {categories.length > 0 && <div className="my-1 h-px bg-border" aria-hidden="true" />}
             {categories.map((category) => (
               <MenuLinkItem
                 key={category.id}

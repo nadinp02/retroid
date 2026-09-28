@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, LogOut, Megaphone, Package, Star, Tag, Tags, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  ListOrdered,
+  LogOut,
+  Megaphone,
+  Package,
+  Star,
+  Tag,
+  Tags,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
@@ -13,15 +23,14 @@ const NAV_ITEMS = [
   { href: "/administracion/resenas", label: "Reseñas", icon: Star, exact: false },
   { href: "/administracion/usuarios", label: "Usuarios", icon: Users, exact: false },
   { href: "/administracion/anuncio", label: "Anuncio", icon: Megaphone, exact: false },
+  { href: "/administracion/marquee", label: "Barra promo", icon: ListOrdered, exact: false },
 ] as const;
 
 export function AdminSidebar({
   userEmail,
-  userRole,
   signOutAction,
 }: {
   userEmail: string;
-  userRole: string;
   signOutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
@@ -64,11 +73,7 @@ export function AdminSidebar({
         </nav>
 
         <div className="space-y-3 border-t border-sidebar-border p-4">
-          <p className="truncate font-mono text-xs text-muted-foreground">
-            {userEmail}
-            <br />
-            <span className="font-medium text-sidebar-foreground">{userRole}</span>
-          </p>
+          <p className="truncate font-mono text-xs text-muted-foreground">{userEmail}</p>
           <form action={signOutAction}>
             <Button type="submit" variant="outline" size="sm" className="w-full gap-2">
               <LogOut className="size-4" />

@@ -23,7 +23,10 @@ const dateFormatter = new Intl.DateTimeFormat("es-AR", {
   minute: "2-digit",
 });
 
-const STATUS_BADGE: Record<ReviewStatus, { label: string; variant: "secondary" | "success" | "destructive" }> = {
+const STATUS_BADGE: Record<
+  ReviewStatus,
+  { label: string; variant: "secondary" | "success" | "destructive" }
+> = {
   PENDING: { label: "Pendiente", variant: "secondary" },
   APPROVED: { label: "Aprobada", variant: "success" },
   REJECTED: { label: "Rechazada", variant: "destructive" },

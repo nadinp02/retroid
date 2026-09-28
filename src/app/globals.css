@@ -328,19 +328,30 @@
   .rating-input label {
     cursor: pointer;
     line-height: 0;
+    padding: 0.25rem;
+    margin: -0.25rem;
+    border-radius: 0.25rem;
   }
   .rating-input label svg {
     fill: transparent;
     color: var(--muted-foreground);
     transition:
       color 120ms ease,
-      fill 120ms ease;
+      fill 120ms ease,
+      transform 120ms ease;
   }
   .rating-input label:hover svg,
   .rating-input label:hover ~ label svg,
   .rating-input input:checked ~ label svg {
     fill: currentColor;
     color: var(--primary);
+  }
+  .rating-input label:hover svg,
+  .rating-input label:hover ~ label svg {
+    transform: scale(1.12);
+  }
+  .rating-input input:checked + label svg {
+    transform: scale(1.05);
   }
   .rating-input input:focus-visible + label {
     outline: 2px solid var(--ring);
