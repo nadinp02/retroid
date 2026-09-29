@@ -90,9 +90,16 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* suppressHydrationWarning: los navegadores no reflejan el valor real
+          del atributo nonce por seguridad (para que no se pueda leer desde
+          el DOM/devtools) — React ve "" al hidratar aunque el server sí
+          mandó el nonce real, y por diseño lo marca como mismatch. El
+          script ya corrió validado por el navegador contra la CSP antes de
+          que React llegue a compararlo, así que no hay nada roto acá. */}
       <script
         type="application/ld+json"
         nonce={nonce}
+        suppressHydrationWarning
         dangerouslySetInnerHTML={jsonLdScriptProps(organizationJsonLd())}
       />
 

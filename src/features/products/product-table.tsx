@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import {
   Table,
@@ -43,10 +42,12 @@ export function ProductTable({
   products,
   categories,
   brands,
+  onEdit,
 }: {
   products: ProductRow[];
   categories: Category[];
   brands: Brand[];
+  onEdit: (product: ProductRow) => void;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editing, setEditing] = useState(false);
@@ -300,12 +301,10 @@ export function ProductTable({
                     variant="outline"
                     size="icon-sm"
                     aria-label={`Editar ${product.name}`}
-                    render={
-                      <Link href={`/administracion/productos/${product.id}/editar`}>
-                        <Pencil className="size-3.5" />
-                      </Link>
-                    }
-                  />
+                    onClick={() => onEdit(product)}
+                  >
+                    <Pencil className="size-3.5" />
+                  </Button>
                   <DeleteButton
                     action={deleteProductAction.bind(null, product.id)}
                     confirmMessage={`¿Eliminar el producto "${product.name}"? Esta acción no se puede deshacer.`}

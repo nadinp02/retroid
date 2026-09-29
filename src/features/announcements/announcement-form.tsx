@@ -12,9 +12,15 @@ import { FieldError } from "@/components/field-error";
 import { updateAnnouncementAction } from "@/actions/announcements/actions";
 import { emptyFormState } from "@/types/form-state";
 
-function toDateInputValue(date: Date | null) {
+// El announcement llega de getAnnouncement(), que pasa por unstable_cache:
+// el valor cacheado se serializa, así que startAt/endAt pueden llegar como
+// string en vez de Date (mismo problema ya resuelto para este mismo dato en
+// getActiveAnnouncement()/announcement-popup.tsx). new Date(...) normaliza
+// ambos casos — sin esto, un string no tiene método toISOString y esta
+// página tira un 500 apenas hay una fecha cargada.
+function toDateInputValue(date: Date | string | null) {
   if (!date) return "";
-  return date.toISOString().slice(0, 10);
+  return new Date(date).toISOString().slice(0, 10);
 }
 
 export function AnnouncementForm({ announcement }: { announcement: Announcement | null }) {

@@ -128,3 +128,26 @@ export function replyToReview(id: string, reply: string) {
 export function deleteReview(id: string) {
   return prisma.review.delete({ where: { id } });
 }
+
+export function deleteReviews(ids: string[]) {
+  return prisma.review.deleteMany({ where: { id: { in: ids } } });
+}
+
+export function bulkUpdateReviewStatus(ids: string[], status: ReviewStatus) {
+  return prisma.review.updateMany({ where: { id: { in: ids } }, data: { status } });
+}
+
+/**
+ * Slugs de producto de estas reseñas (sin duplicados, sin las que no tienen
+ * producto asociado) — para poder revalidar sus páginas públicas después de
+ * una acción masiva, que a diferencia de la individual no devuelve las filas
+ * afectadas (updateMany/deleteMany no traen de vuelta datos).
+ */
+export async function listAffectedProductSlugs(ids: string[]): Promise<string[]> {
+  const reviews = await prisma.review.findMany({
+    where: { id: { in: ids }, productId: { not: null } },
+    select: { product: { select: { slug: true } } },
+  });
+  const slugs = reviews.map((review) => review.product?.slug).filter((slug) => slug !== undefined);
+  return Array.from(new Set(slugs));
+}

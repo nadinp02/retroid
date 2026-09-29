@@ -79,7 +79,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             WhatsAppFloatButton (fixed, misma esquina) no lo tape al llegar
             al final de la página. */}
         <div className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6">
-          <div className="flex flex-col gap-10 sm:flex-row sm:gap-24">
+          <div className="flex flex-col gap-10 sm:flex-row sm:flex-wrap sm:gap-16 lg:gap-24">
             <div className="max-w-xs space-y-3">
               <Wordmark />
               <p className="text-sm text-muted-foreground">
@@ -111,6 +111,56 @@ export default async function PublicLayout({ children }: { children: ReactNode }
                     Productos
                   </Link>
                 </li>
+              </ul>
+            </div>
+
+            {categories.length > 0 && (
+              <div className="space-y-3">
+                <p className="font-mono text-xs font-semibold tracking-wide uppercase">
+                  Categorías
+                </p>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  {categories.map((category) => (
+                    <li key={category.id}>
+                      <Link
+                        href={`/productos?categoria=${category.slug}`}
+                        className="transition-colors hover:text-accent"
+                      >
+                        {category.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <p className="font-mono text-xs font-semibold tracking-wide uppercase">Contacto</p>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a
+                    href={generalWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 transition-colors hover:text-accent"
+                  >
+                    <MessageCircle className="size-3.5" />
+                    WhatsApp
+                  </a>
+                </li>
+                {siteConfig.instagramUrl && (
+                  <li>
+                    <a
+                      href={siteConfig.instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 transition-colors hover:text-accent"
+                    >
+                      <InstagramIcon className="size-3.5" />
+                      Instagram
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           </div>

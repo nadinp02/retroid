@@ -6,6 +6,7 @@ type ProductFilters = {
   categoryId?: string;
   brandId?: string;
   isActive?: boolean;
+  search?: string;
 };
 
 // Listado admin (ProductTable): no pinta imágenes, no las trae.
@@ -38,8 +39,14 @@ const PRODUCT_DETAIL_RELATIONS = {
 };
 
 export function listProducts(filters: ProductFilters = {}) {
+  const { search, ...rest } = filters;
+  const where: Prisma.ProductWhereInput = {
+    ...rest,
+    ...(search && { name: { contains: search, mode: "insensitive" } }),
+  };
+
   return prisma.product.findMany({
-    where: filters,
+    where,
     include: PRODUCT_LIST_RELATIONS,
     orderBy: { createdAt: "desc" },
   });

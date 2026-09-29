@@ -37,3 +37,11 @@ export function updateBrand(id: string, data: Partial<CreateBrandInput>) {
 export function deleteBrand(id: string) {
   return prisma.brand.delete({ where: { id } });
 }
+
+export function deleteBrands(ids: string[]) {
+  return prisma.brand.deleteMany({ where: { id: { in: ids } } });
+}
+
+export function bulkUpdateBrandsActive(ids: string[], isActive: boolean) {
+  return prisma.brand.updateMany({ where: { id: { in: ids } }, data: { isActive } });
+}

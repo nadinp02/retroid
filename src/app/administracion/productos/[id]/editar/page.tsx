@@ -23,7 +23,11 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
       <SectionHeading>Editar producto</SectionHeading>
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,36rem)_1fr] xl:items-start">
-        <ProductForm product={product} categories={categories} brands={brands} />
+        <ProductForm
+          product={{ ...product, price: product.price.toString() }}
+          categories={categories}
+          brands={brands}
+        />
 
         <div className="space-y-3">
           <h2 className="font-mono text-lg font-semibold tracking-tight uppercase">Imágenes</h2>

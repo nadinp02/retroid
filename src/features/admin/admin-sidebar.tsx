@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowLeft,
   LayoutDashboard,
   ListOrdered,
   LogOut,
@@ -73,6 +74,13 @@ export function AdminSidebar({
         </nav>
 
         <div className="space-y-3 border-t border-sidebar-border p-4">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-mono text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-accent"
+          >
+            <ArrowLeft className="size-3.5" />
+            Volver al sitio
+          </Link>
           <p className="truncate font-mono text-xs text-muted-foreground">{userEmail}</p>
           <form action={signOutAction}>
             <Button type="submit" variant="outline" size="sm" className="w-full gap-2">
@@ -101,11 +109,23 @@ export function AdminSidebar({
             </Link>
           ))}
         </nav>
-        <form action={signOutAction}>
-          <Button type="submit" variant="ghost" size="icon-sm" aria-label="Cerrar sesión">
-            <LogOut className="size-4" />
-          </Button>
-        </form>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Volver al sitio"
+            render={
+              <Link href="/">
+                <ArrowLeft className="size-4" />
+              </Link>
+            }
+          />
+          <form action={signOutAction}>
+            <Button type="submit" variant="ghost" size="icon-sm" aria-label="Cerrar sesión">
+              <LogOut className="size-4" />
+            </Button>
+          </form>
+        </div>
       </div>
     </>
   );

@@ -38,3 +38,11 @@ export function updateCategory(id: string, data: Partial<CreateCategoryInput>) {
 export function deleteCategory(id: string) {
   return prisma.category.delete({ where: { id } });
 }
+
+export function deleteCategories(ids: string[]) {
+  return prisma.category.deleteMany({ where: { id: { in: ids } } });
+}
+
+export function bulkUpdateCategoriesActive(ids: string[], isActive: boolean) {
+  return prisma.category.updateMany({ where: { id: { in: ids } }, data: { isActive } });
+}

@@ -7,6 +7,8 @@ import {
   createMarqueeItem,
   updateMarqueeItem,
   deleteMarqueeItem,
+  deleteMarqueeItems,
+  bulkUpdateMarqueeItemsActive,
   reorderMarqueeItems,
 } from "@/services/marquee";
 import { emptyFormState, type FormState } from "@/types/form-state";
@@ -45,6 +47,43 @@ export async function updateMarqueeItemAction(
   redirect("/administracion/marquee");
 }
 
+// Variantes "modal": misma validación y mutación que las de arriba, pero sin
+// redirect() — las usa MarqueeItemFormDialog, que necesita quedarse en la
+// misma página para cerrar el modal y refrescar la lista in-place. Las de
+// arriba se mantienen intactas para /nuevo y /[id]/editar.
+export async function createMarqueeItemModalAction(
+  _prevState: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireSession();
+
+  const parsed = parseMarqueeItemForm(formData);
+  if (!parsed.success) {
+    return { errors: parsed.error.flatten().fieldErrors };
+  }
+
+  await createMarqueeItem(parsed.data);
+  revalidateTag("marquee");
+  return { errors: {}, success: "created" };
+}
+
+export async function updateMarqueeItemModalAction(
+  id: string,
+  _prevState: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireSession();
+
+  const parsed = parseMarqueeItemForm(formData);
+  if (!parsed.success) {
+    return { errors: parsed.error.flatten().fieldErrors };
+  }
+
+  await updateMarqueeItem(id, parsed.data);
+  revalidateTag("marquee");
+  return { errors: {}, success: "updated" };
+}
+
 export async function deleteMarqueeItemAction(
   id: string,
   _prevState: FormState,
@@ -63,6 +102,27 @@ export async function reorderMarqueeItemsAction(orderedIds: string[]): Promise<A
   await requireSession();
 
   await reorderMarqueeItems(orderedIds);
+  revalidateTag("marquee");
+  return { ok: true, data: null };
+}
+
+export async function bulkDeleteMarqueeItemsAction(ids: string[]): Promise<ActionResult<null>> {
+  await requireSession();
+  if (ids.length === 0) return { ok: true, data: null };
+
+  await deleteMarqueeItems(ids);
+  revalidateTag("marquee");
+  return { ok: true, data: null };
+}
+
+export async function bulkUpdateMarqueeItemsActiveAction(
+  ids: string[],
+  isActive: boolean,
+): Promise<ActionResult<null>> {
+  await requireSession();
+  if (ids.length === 0) return { ok: true, data: null };
+
+  await bulkUpdateMarqueeItemsActive(ids, isActive);
   revalidateTag("marquee");
   return { ok: true, data: null };
 }

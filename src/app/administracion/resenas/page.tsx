@@ -13,6 +13,14 @@ const FILTERS = [
   { value: ReviewStatus.REJECTED, label: "Rechazadas" },
 ] as const;
 
+const dateFormatter = new Intl.DateTimeFormat("es-AR", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 type ResenasSearchParams = {
   estado?: string;
   page?: string;
@@ -76,7 +84,12 @@ export default async function ResenasPage({
         })}
       </nav>
 
-      <ReviewTable reviews={reviews} />
+      <ReviewTable
+        reviews={reviews.map((review) => ({
+          ...review,
+          formattedDate: dateFormatter.format(review.createdAt),
+        }))}
+      />
       <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />
     </div>
   );

@@ -16,8 +16,25 @@ import {
   reorderProductImages,
   setHoverProductImage,
 } from "@/services/products";
+import type { ProductImage } from "@/types/catalog";
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+// La lista de productos (ProductTable) no trae imágenes (ver comentario en
+// services/products.ts) — ProductFormDialog las pide recién al abrir el
+// modal de edición de un producto existente.
+export async function getProductImagesAction(
+  productId: string,
+): Promise<ActionResult<ProductImage[]>> {
+  await requireSession();
+
+  const product = await getProductById(productId);
+  if (!product) {
+    return { ok: false, error: "Producto no encontrado." };
+  }
+
+  return { ok: true, data: product.images };
+}
 
 type UploadSignature = {
   timestamp: number;

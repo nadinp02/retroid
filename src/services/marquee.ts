@@ -43,6 +43,14 @@ export function deleteMarqueeItem(id: string) {
   return prisma.marqueeItem.delete({ where: { id } });
 }
 
+export function deleteMarqueeItems(ids: string[]) {
+  return prisma.marqueeItem.deleteMany({ where: { id: { in: ids } } });
+}
+
+export function bulkUpdateMarqueeItemsActive(ids: string[], isActive: boolean) {
+  return prisma.marqueeItem.updateMany({ where: { id: { in: ids } }, data: { isActive } });
+}
+
 /**
  * Persiste el orden final de las frases: `orderedIds[0]` queda en
  * `position` 0, etc. Mismo patrón que reorderProductImages en

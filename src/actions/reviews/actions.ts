@@ -9,7 +9,10 @@ import {
   updateReviewStatus,
   replyToReview,
   deleteReview,
+  deleteReviews,
+  bulkUpdateReviewStatus,
   getReviewById,
+  listAffectedProductSlugs,
 } from "@/services/reviews";
 import { getProductById } from "@/services/products";
 import { emptyFormState, type FormState } from "@/types/form-state";
@@ -113,4 +116,33 @@ export async function deleteReviewAction(
   revalidatePath("/administracion/resenas");
   revalidatePublicPages(review?.product?.slug);
   return emptyFormState;
+}
+
+type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+export async function bulkUpdateReviewStatusAction(
+  ids: string[],
+  status: ReviewStatus,
+): Promise<ActionResult<null>> {
+  await requireSession();
+  if (ids.length === 0) return { ok: true, data: null };
+
+  const slugs = await listAffectedProductSlugs(ids);
+  await bulkUpdateReviewStatus(ids, status);
+  revalidatePath("/administracion/resenas");
+  revalidatePath("/");
+  slugs.forEach((slug) => revalidatePath(`/productos/${slug}`));
+  return { ok: true, data: null };
+}
+
+export async function bulkDeleteReviewsAction(ids: string[]): Promise<ActionResult<null>> {
+  await requireSession();
+  if (ids.length === 0) return { ok: true, data: null };
+
+  const slugs = await listAffectedProductSlugs(ids);
+  await deleteReviews(ids);
+  revalidatePath("/administracion/resenas");
+  revalidatePath("/");
+  slugs.forEach((slug) => revalidatePath(`/productos/${slug}`));
+  return { ok: true, data: null };
 }

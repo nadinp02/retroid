@@ -5,13 +5,24 @@ import { authConfig } from "@/auth.config";
 const { auth } = NextAuth(authConfig);
 
 function buildCsp(nonce: string) {
+  // El Fast Refresh / HMR de "next dev" usa eval() internamente (webpack
+  // devtool eval-source-map) — sin 'unsafe-eval' en dev, cualquier página
+  // tira un CSP violation apenas hidrata y JS deja de responder: el menú,
+  // los selects, la galería, todo lo que dependa de un handler de React
+  // queda roto. next build/start no lo necesita — esto NO relaja nada en
+  // producción, solo en desarrollo local.
+  const scriptSrc =
+    process.env.NODE_ENV === "development"
+      ? `script-src 'self' 'unsafe-eval' 'nonce-${nonce}'`
+      : `script-src 'self' 'nonce-${nonce}'`;
+
   return [
     "default-src 'self'",
     // 'self' cubre los chunks propios de Next; el nonce cubre tanto los
     // scripts inline que genera el propio Next (bootstrap/hydration, los
     // detecta automáticamente vía esta misma cabecera) como los JSON-LD que
     // escribimos a mano (ver src/lib/nonce.ts).
-    `script-src 'self' 'nonce-${nonce}'`,
+    scriptSrc,
     // Sin nonce para estilos: Tailwind/los componentes usan bastante
     // style="..." inline, y un CSP nonce-based para eso no vale la
     // complejidad acá — 'unsafe-inline' en style-src es un trade-off
