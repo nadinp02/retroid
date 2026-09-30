@@ -57,7 +57,7 @@ function MenuLinkItem({ className, ...props }: MenuPrimitive.LinkItem.Props) {
     <MenuPrimitive.LinkItem
       data-slot="menu-link-item"
       className={cn(
-        "flex w-full cursor-default items-center gap-1.5 px-3 py-2 font-mono text-xs font-medium tracking-wide uppercase whitespace-nowrap outline-none select-none data-highlighted:bg-accent/10 data-highlighted:text-accent",
+        "flex w-full cursor-pointer items-center gap-1.5 px-3 py-2 font-mono text-xs font-medium tracking-wide uppercase whitespace-nowrap outline-none select-none data-highlighted:bg-accent/10 data-highlighted:text-accent",
         className,
       )}
       {...props}

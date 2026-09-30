@@ -13,7 +13,7 @@
   /* Serif display (Playfair) reservada para el hero y títulos hero de la
      Home — ver AGENTS del rediseño. No confundir con --font-heading, que
      sigue siendo sans y la usa CardTitle en el admin. */
-  --font-display: var(--font-playfair-display);
+  --font-display: var(--font-archivo);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -69,14 +69,13 @@
 }
 
 /*
- * Paleta RETROID v3 — DedSec / software retro / terminal hacker.
- * Fondo casi negro puro, paneles #111, bordes #2a2a2a. Amarillo es el
- * color PRINCIPAL de marca (CTAs, botones default, precios, estados
- * activos de nav) — violeta es el acento secundario decorativo (bordes
- * hover, chrome de ventana, badges, glitch). El focus ring se mantiene
- * violeta a propósito (pedido explícito), independiente del color
- * principal. --success es un caso puntual (no es color de marca) usado
- * solo por Badge para estados "activo/disponible", imitando el mockup.
+ * Paleta RETAKE v4 — marca en amarillo, negro y blanco (sin violeta: el
+ * logo solo existe en esas tres variantes). Fondo casi negro puro, paneles
+ * #111, bordes #2a2a2a. Amarillo es el ÚNICO color de marca: CTAs,
+ * precios, estados activos y también el acento (hovers, bordes, focus
+ * ring) — --accent apunta al mismo amarillo en vez de a un segundo color.
+ * --success es un caso puntual (no es color de marca) usado solo por
+ * Badge para estados "activo/disponible".
  */
 .dark {
   --background: #050505;
@@ -92,17 +91,17 @@
   --secondary-foreground: #ffffff;
   --muted: #131316;
   --muted-foreground: #a1a1aa;
-  /* Violeta — acento secundario decorativo */
-  --accent: #8b5cf6;
-  --accent-foreground: #ffffff;
+  /* Acento = el mismo amarillo de marca (hovers, bordes, selección) */
+  --accent: #facc15;
+  --accent-foreground: #050505;
   --destructive: #f87171;
   --border: #2a2a2a;
   --input: #2a2a2a;
-  --ring: #8b5cf6;
+  --ring: #facc15;
   --success: #22c55e;
   --success-foreground: #052e12;
   --chart-1: #facc15;
-  --chart-2: #8b5cf6;
+  --chart-2: #e4e4e7;
   --chart-3: #a1a1aa;
   --chart-4: #71717a;
   --chart-5: #3f3f46;
@@ -113,7 +112,7 @@
   --sidebar-accent: #18181b;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #2a2a2a;
-  --sidebar-ring: #8b5cf6;
+  --sidebar-ring: #facc15;
 }
 
 @layer base {
@@ -125,6 +124,36 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Tailwind v4 dejó de poner cursor: pointer en <button> (usa el default
+     del navegador). Todo lo clickeable lo recupera acá, incluidos los
+     elementos con rol interactivo que arma Base UI (triggers, ítems de
+     menú, opciones de select, tabs). En @layer base a propósito: cualquier
+     utility puntual (cursor-grab, cursor-zoom-in...) le sigue ganando. */
+  button,
+  summary,
+  select,
+  label[for],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="file"],
+  [role="button"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="option"],
+  [role="tab"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="combobox"] {
+    cursor: pointer;
+  }
+
+  :is(button, select, input, [role]):is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
   }
 }
 

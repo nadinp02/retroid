@@ -10,14 +10,18 @@ import { AnnouncementMarquee } from "@/components/announcement-marquee";
 import { MobileNav } from "@/components/mobile-nav";
 import { ProductsNavMenu } from "@/components/products-nav-menu";
 import { InstagramIcon } from "@/components/icons/instagram-icon";
+import { Wordmark } from "@/components/wordmark";
 import { getActiveAnnouncement } from "@/services/announcements";
 import { listCategories } from "@/services/categories";
 
-function Wordmark({ className }: { className?: string }) {
+// Encabezado de columna del footer: numeración estilo menú de juego
+// ("01 Explorar") en color de acento, en línea con la estética retro.
+function FooterHeading({ index, children }: { index: string; children: ReactNode }) {
   return (
-    <Link href="/" className={`font-mono text-base font-bold tracking-tight ${className ?? ""}`}>
-      RETRO<span className="text-accent">ID</span>
-    </Link>
+    <p className="flex items-baseline gap-2 font-mono text-xs font-semibold tracking-wide uppercase">
+      <span className="text-accent">{index}</span>
+      {children}
+    </p>
   );
 }
 
@@ -48,7 +52,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
           </div>
 
           <div className="justify-self-center">
-            <Wordmark />
+            <Wordmark name={siteConfig.companyName} />
           </div>
 
           <div className="justify-self-end">
@@ -79,27 +83,19 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             WhatsAppFloatButton (fixed, misma esquina) no lo tape al llegar
             al final de la página. */}
         <div className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6">
-          <div className="flex flex-col gap-10 sm:flex-row sm:flex-wrap sm:gap-16 lg:gap-24">
-            <div className="max-w-xs space-y-3">
-              <Wordmark />
+          {/* Grilla fija en vez de flex-wrap: la marca ocupa el doble y las
+              tres columnas de links se reparten parejo el resto del ancho,
+              así no queda un hueco vacío a la derecha en pantallas anchas. */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 lg:grid-cols-[2fr_1fr_1fr_1fr] lg:gap-x-12">
+            <div className="col-span-2 max-w-xs space-y-3 lg:col-span-1">
+              <Wordmark name={siteConfig.companyName} className="text-xl" />
               <p className="text-sm text-muted-foreground">
                 Nintendo DS, 3DS y accesorios seleccionados. Importados desde Japón.
               </p>
-              {siteConfig.instagramUrl && (
-                <a
-                  href={siteConfig.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="flex size-8 items-center justify-center border border-border text-muted-foreground transition-colors hover:border-accent hover:text-accent"
-                >
-                  <InstagramIcon className="size-4" />
-                </a>
-              )}
             </div>
 
             <div className="space-y-3">
-              <p className="font-mono text-xs font-semibold tracking-wide uppercase">Explorar</p>
+              <FooterHeading index="01">Explorar</FooterHeading>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/" className="transition-colors hover:text-accent">
@@ -116,9 +112,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
 
             {categories.length > 0 && (
               <div className="space-y-3">
-                <p className="font-mono text-xs font-semibold tracking-wide uppercase">
-                  Categorías
-                </p>
+                <FooterHeading index="02">Categorías</FooterHeading>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {categories.map((category) => (
                     <li key={category.id}>
@@ -135,7 +129,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             )}
 
             <div className="space-y-3">
-              <p className="font-mono text-xs font-semibold tracking-wide uppercase">Contacto</p>
+              <FooterHeading index={categories.length > 0 ? "03" : "02"}>Contacto</FooterHeading>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a
@@ -165,8 +159,19 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             </div>
           </div>
 
-          <div className="mt-10 border-t border-border pt-6 font-mono text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {siteConfig.companyName}. Todos los derechos reservados.
+          <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 font-mono text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              © {new Date().getFullYear()} {siteConfig.companyName}. Todos los derechos reservados.
+            </span>
+            <a
+              href="#"
+              className="group self-start transition-colors hover:text-accent sm:self-auto"
+            >
+              Volver arriba{" "}
+              <span className="inline-block transition-transform group-hover:-translate-y-0.5">
+                ↑
+              </span>
+            </a>
           </div>
         </div>
       </footer>

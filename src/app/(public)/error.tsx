@@ -20,7 +20,7 @@ export default function PublicError({
   }, [error]);
 
   return (
-    <WindowPanel title="RETROID" bodyClassName="flex flex-col items-center gap-4 p-12 text-center">
+    <WindowPanel title="ERROR" bodyClassName="flex flex-col items-center gap-4 p-12 text-center">
       <TriangleAlert className="size-10 text-destructive" aria-hidden="true" />
       <div className="space-y-1.5">
         <h1 className="text-xl font-semibold">Algo salió mal</h1>

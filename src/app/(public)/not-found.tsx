@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 // genérico de Next en vez de mantener la identidad visual del sitio.
 export default function PublicNotFound() {
   return (
-    <WindowPanel title="RETROID" bodyClassName="flex flex-col items-center gap-4 p-12 text-center">
+    <WindowPanel title="404" bodyClassName="flex flex-col items-center gap-4 p-12 text-center">
       <PackageSearch className="size-10 text-muted-foreground" aria-hidden="true" />
       <div className="space-y-1.5">
         <h1 className="text-xl font-semibold">No encontramos esta página</h1>

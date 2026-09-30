@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ComponentType } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import { Cable, Briefcase, Gamepad2, Layers, MessageCircle, Package } from "lucide-react";
 import { listPublicProducts, listProductOptions } from "@/services/products";
 import { listCategories } from "@/services/categories";
@@ -16,6 +16,7 @@ import { BenefitsStrip } from "@/components/benefits-strip";
 import { buildWhatsAppUrl, buildGeneralWhatsAppMessage } from "@/lib/whatsapp";
 import { organizationJsonLd, jsonLdScriptProps } from "@/lib/structured-data";
 import { getNonce } from "@/lib/nonce";
+import { siteConfig } from "@/lib/site-config";
 
 // Sin searchParams/params, Next.js pre-renderizaría esta página como
 // estática en build time. Forzamos render dinámico para que siempre
@@ -23,7 +24,7 @@ import { getNonce } from "@/lib/nonce";
 // desde el backoffice), sin depender de revalidatePath en cada acción.
 export const dynamic = "force-dynamic";
 
-const HOME_TITLE = "RETROID | Consolas Retro, Nintendo DS y 3DS Argentina";
+const HOME_TITLE = `${siteConfig.companyName} | Consolas Retro, Nintendo DS y 3DS Argentina`;
 const HOME_DESCRIPTION =
   "Compra y venta de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Envíos a todo Argentina.";
 
@@ -32,15 +33,15 @@ export async function generateMetadata(): Promise<Metadata> {
   // página define los suyos, tiene que repetir la imagen o la pierde.
   const ogImage = {
     url: "/banner.jpg",
-    width: 1279,
-    height: 929,
-    alt: "RETROID — consolas retro Nintendo DS y 3DS",
+    width: 1916,
+    height: 821,
+    alt: `${siteConfig.companyName} — consolas retro Nintendo DS y 3DS`,
   };
 
   return {
     // title.absolute: esta es la página más importante a rankear — usa el
     // mismo copy que el default del layout raíz, pero sin pasar por el
-    // template "%s | RETROID" (si no, quedaría duplicado "... | RETROID | RETROID").
+    // template "%s | <marca>" (si no, quedaría duplicado "... | RETAKE | RETAKE").
     title: { absolute: HOME_TITLE },
     description: HOME_DESCRIPTION,
     alternates: { canonical: "/" },
@@ -59,6 +60,28 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
+
+// Hero con art direction vía <picture>: <Image> solo admite una fuente, así
+// que se usa getImageProps (misma optimización de Next) para armar el
+// srcSet de cada versión. La mobile va como <img> por defecto y la desktop
+// como <source> con media query.
+const HERO_ALT = "Mano esquelética sosteniendo una Nintendo 3DS";
+const {
+  props: { srcSet: heroDesktopSrcSet },
+} = getImageProps({
+  src: "/banner.jpg",
+  alt: HERO_ALT,
+  fill: true,
+  sizes: "100vw",
+  priority: true,
+});
+const { props: heroImgProps } = getImageProps({
+  src: "/banner-mobile.jpg",
+  alt: HERO_ALT,
+  fill: true,
+  sizes: "100vw",
+  priority: true,
+});
 
 const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   consolas: Gamepad2,
@@ -106,45 +129,74 @@ export default async function HomePage() {
       {/* Hero: una sola imagen de fondo (sin carousel), full-bleed. El
           -mt-10/-mt-14 cancela el padding-top de <main> para que quede
           pegado al announcement bar, tal como en la referencia. */}
-      <section className="full-bleed relative -mt-10 h-[78svh] min-h-[540px] overflow-hidden sm:-mt-14 sm:h-[82svh] sm:min-h-[620px] lg:h-[88svh] lg:min-h-[680px] lg:max-h-[820px]">
-        <Image
-          src="/banner.jpg"
-          alt="Mano esquelética sosteniendo una Nintendo 3DS"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        {/* Overlay oscuro/degradado: garantiza legibilidad del texto sin
-            depender de en qué parte de la imagen recorte cada viewport. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/65 to-black/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+      {/* Mobile: sin alto fijo — el hero mide lo que el texto + un margen
+          parejo (py-20), así no queda aire muerto arriba y abajo. Desde sm
+          vuelve al alto relativo a la pantalla. */}
+      <section className="full-bleed relative -mt-10 overflow-hidden bg-black py-20 sm:-mt-14 sm:h-[82svh] sm:min-h-[620px] sm:py-0 lg:h-[88svh] lg:min-h-[680px] lg:max-h-[820px]">
+        {/* Art direction: una ilustración horizontal para desktop y otra
+            vertical para mobile (ver HERO_IMAGES), cada una compuesta con
+            su propia zona libre para el texto. */}
+        <picture>
+          <source media="(min-width: 768px)" srcSet={heroDesktopSrcSet} />
+          <img
+            {...heroImgProps}
+            alt={HERO_ALT}
+            // Mobile: fondo puro detrás del texto centrado — anclada al 65%
+            // vertical para que lo que asome sea la DS y no el negro vacío
+            // de arriba. Desktop: cover anclado a la derecha (la
+            // horizontal está compuesta a ~2.33:1, la proporción del hero en
+            // un monitor común, así que tampoco recorta casi nada). Solo en
+            // pantallas ultra anchas pasa a contain: ahí cover cortaría la
+            // mano arriba, y el sobrante de la izquierda queda negro bajo la
+            // sombra lateral.
+            className="object-cover object-[50%_65%] md:object-right min-[2100px]:object-contain"
+          />
+        </picture>
+        {/* Velo parejo sobre toda la ilustración (sin degradé lateral): la
+            imagen es fondo, no protagonista — el texto y los CTAs mandan.
+            El degradé inferior solo funde el borde con la franja de
+            beneficios. */}
+        {/* En mobile el texto queda encima de la DS: velo un poco más
+            fuerte para que la ilustración sea solo clima. */}
+        <div className="absolute inset-0 bg-black/70 md:bg-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent via-30% to-transparent" />
 
-        <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center gap-5 px-4 sm:px-6">
-          <p className="font-mono text-xs tracking-[0.2em] text-primary uppercase">
+        {/* Centrado verticalmente en todos los tamaños: la ilustración es
+            fondo, el texto va encima (en mobile, con los CTAs en una fila). */}
+        <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-center gap-4 px-4 sm:gap-5 sm:px-6">
+          <p className="font-mono text-[10px] tracking-[0.12em] text-primary uppercase sm:text-xs sm:tracking-[0.2em]">
             Nintendo DS // 3DS // Importadas desde Japón
           </p>
-          <h1 className="max-w-2xl text-balance font-display text-4xl leading-[1.05] font-black text-white sm:text-6xl lg:text-7xl">
+          {/* Mayúscula + itálica + ancho semi-expandido: mismo lenguaje que
+              el logo. */}
+          <h1 className="max-w-3xl text-balance font-display text-4xl leading-[0.95] font-black tracking-tight text-white uppercase italic font-stretch-semi-expanded sm:text-5xl lg:text-6xl">
             Historias que siguen <GlitchText>en juego</GlitchText>.
           </h1>
-          <p className="max-w-md text-balance text-base text-white/80 sm:text-lg">
+          <p className="max-w-lg text-balance text-white/80 sm:text-lg lg:text-xl">
             Nintendo DS, 3DS, accesorios y ediciones difíciles de conseguir, seleccionadas una por
             una.
           </p>
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <Button size="lg" render={<Link href="/productos">Ver catálogo</Link>} />
+          {/* h-11 en vez del size="lg" del sistema (h-9): son la acción
+              principal de la página y tienen que pesar más que la etiqueta. */}
+          <div className="flex gap-3 pt-1 sm:pt-2">
+            <Button
+              size="lg"
+              className="h-11 flex-1 px-5 text-sm sm:flex-none"
+              render={<Link href="/productos">Ver catálogo</Link>}
+            />
             <WhatsAppButton
               url={whatsappUrl}
               label={
                 <>
                   <MessageCircle className="size-4" />
-                  Consultar por WhatsApp
+                  <span className="sm:hidden">WhatsApp</span>
+                  <span className="hidden sm:inline">Consultar por WhatsApp</span>
                 </>
               }
               event={{ name: "whatsapp_click_general" }}
               variant="outline"
               size="lg"
-              className="border-white/30 bg-black/30 text-white backdrop-blur-sm hover:border-primary hover:bg-black/50 hover:text-white"
+              className="h-11 flex-1 border-white/30 bg-black/30 px-5 text-sm text-white backdrop-blur-sm hover:border-primary hover:bg-black/50 hover:text-white sm:flex-none"
             />
           </div>
         </div>

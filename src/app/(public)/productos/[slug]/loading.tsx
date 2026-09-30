@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ProductoDetalleLoading() {
   return (
     <WindowPanel
-      title="RETROID"
+      title="PRODUCTO"
       bodyClassName="grid gap-8 p-6 lg:grid-cols-2 lg:gap-12 lg:items-start"
     >
       <Skeleton className="aspect-square w-full" />

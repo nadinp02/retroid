@@ -159,6 +159,25 @@ model MarqueeItem {
   @@map("marquee_items")
 }
 
+// Franja de beneficios de la Home (BenefitsStrip) y su versión compacta en
+// el detalle de producto (ProductTrustStrip) — antes hardcodeada en
+// benefits-strip.tsx. `icon` es una clave del registro cerrado de
+// src/lib/benefit-icons.ts (no un nombre libre de lucide), así el admin
+// elige de una lista y el bundle no carga todos los íconos.
+model Benefit {
+  id        String   @id @default(cuid())
+  icon      String
+  title     String
+  text      String
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, position])
+  @@map("benefits")
+}
+
 // Soporte para el rate limiting de login y alta de reseñas (ver
 // src/lib/rate-limit.ts). Un Map en memoria no sirve en Vercel: cada
 // instancia serverless tiene su propio proceso, así que bajo tráfico

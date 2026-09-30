@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { WindowPanel } from "@/components/ui/window-panel";
 import { Button } from "@/components/ui/button";
+import { PRODUCT_DETAIL_PATTERN } from "@/components/whatsapp-float-button";
 
 const SHOW_AFTER_MS = 3000;
 
@@ -28,6 +29,7 @@ export function AnnouncementPopup({
   announcement: AnnouncementPopupData | null;
 }) {
   const [visible, setVisible] = useState(false);
+  const hasFloatButton = !PRODUCT_DETAIL_PATTERN.test(usePathname());
 
   useEffect(() => {
     if (!announcement) return;
@@ -45,22 +47,20 @@ export function AnnouncementPopup({
   }
 
   return (
-    // bottom-24: deja lugar debajo para el botón flotante de WhatsApp
-    // (WhatsAppFloatButton, fixed en la misma esquina) sin que se pisen.
-    <div className="animate-in fade-in slide-in-from-bottom-4 fixed right-3 bottom-24 z-50 w-[calc(100vw-1.5rem)] max-w-64 duration-300 sm:right-4 sm:bottom-28">
+    // Por defecto deja lugar debajo para el botón flotante de WhatsApp
+    // (WhatsAppFloatButton, fixed en la misma esquina) sin que se pisen. En
+    // el detalle de producto ese botón no se muestra, así que el cartel baja
+    // a la esquina (misma distancia al borde que tendría el botón).
+    <div
+      className={`animate-in fade-in slide-in-from-bottom-4 fixed right-4 z-50 w-[calc(100vw-2rem)] max-w-64 duration-300 sm:right-6 ${
+        hasFloatButton ? "bottom-20 sm:bottom-24" : "bottom-4 sm:bottom-6"
+      }`}
+    >
       <WindowPanel
         title={announcement.title}
         bodyClassName="space-y-2 p-3"
-        actions={
-          <button
-            type="button"
-            onClick={handleClose}
-            aria-label="Cerrar"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <X className="size-3" />
-          </button>
-        }
+        onClose={handleClose}
+        closeLabel="Cerrar anuncio"
       >
         {announcement.description && (
           <p className="text-xs text-muted-foreground">{announcement.description}</p>

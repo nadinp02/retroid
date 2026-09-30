@@ -8,6 +8,7 @@ import { ProductGrid } from "@/features/products/product-grid";
 import { ProductFilters } from "@/features/products/product-filters";
 import { Pagination } from "@/components/pagination";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { siteConfig } from "@/lib/site-config";
 
 type ProductosSearchParams = {
   categoria?: string;
@@ -22,7 +23,7 @@ const DEFAULT_CATALOG_META = {
     "Catálogo completo de consolas retro, Nintendo DS, Nintendo 3DS, cartuchos, accesorios y estuches. Compra y venta en Argentina, Envíos a toda Argentina.",
 };
 
-// Copys curados para las categorías/marcas conocidas de RETROID (coinciden
+// Copys curados para las categorías/marcas conocidas de la tienda (coinciden
 // con los términos de búsqueda objetivo). Cualquier categoría/marca nueva
 // que no esté acá cae al fallback genérico armado con el nombre real.
 const CATEGORY_SEO: Record<string, { title: string; description: string }> = {
@@ -60,7 +61,10 @@ async function resolveCategoryMeta(slug: string) {
   if (known) return known;
   const category = await getCategoryBySlug(slug);
   const name = category?.name ?? slug;
-  return { title: name, description: `${name} — catálogo RETROID. Envíos a todo Argentina.` };
+  return {
+    title: name,
+    description: `${name} — catálogo ${siteConfig.companyName}. Envíos a todo Argentina.`,
+  };
 }
 
 async function resolveBrandMeta(slug: string) {
@@ -68,7 +72,10 @@ async function resolveBrandMeta(slug: string) {
   if (known) return known;
   const brand = await getBrandBySlug(slug);
   const name = brand?.name ?? slug;
-  return { title: name, description: `${name} — catálogo RETROID. Envíos a todo Argentina.` };
+  return {
+    title: name,
+    description: `${name} — catálogo ${siteConfig.companyName}. Envíos a todo Argentina.`,
+  };
 }
 
 // Colapsa la variante "canónica" de /productos: mantiene los filtros de
@@ -93,7 +100,7 @@ export async function generateMetadata({
   const meta = q
     ? {
         title: `Resultados para "${q}"`,
-        description: `Resultados de búsqueda para "${q}" en el catálogo de RETROID: consolas retro, Nintendo DS y 3DS en Argentina.`,
+        description: `Resultados de búsqueda para "${q}" en el catálogo de ${siteConfig.companyName}: consolas retro, Nintendo DS y 3DS en Argentina.`,
       }
     : categoria
       ? await resolveCategoryMeta(categoria)
@@ -104,9 +111,9 @@ export async function generateMetadata({
   const canonicalPath = buildCanonicalPath({ categoria, marca });
   const ogImage = {
     url: "/banner.jpg",
-    width: 1279,
-    height: 929,
-    alt: "RETROID — catálogo de consolas retro",
+    width: 1916,
+    height: 821,
+    alt: `${siteConfig.companyName} — catálogo de consolas retro`,
   };
 
   return {

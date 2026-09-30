@@ -33,12 +33,16 @@ const DESCRIPTION_MAX_LENGTH = 155;
 const LOW_STOCK_THRESHOLD = 5;
 
 function buildProductDescription(product: { name: string; description: string | null }) {
-  if (product.description) {
-    return product.description.length > DESCRIPTION_MAX_LENGTH
-      ? `${product.description.slice(0, DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`
-      : product.description;
+  // En la página la descripción respeta los saltos de línea, pero para
+  // meta/OG se aplana a una sola línea (los buscadores y las previews de
+  // WhatsApp muestran los \n como espacios pegados o los cortan).
+  const flat = product.description?.replace(/\s+/g, " ").trim();
+  if (flat) {
+    return flat.length > DESCRIPTION_MAX_LENGTH
+      ? `${flat.slice(0, DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`
+      : flat;
   }
-  return `Comprá ${product.name} en RETROID. Envíos a todo Argentina.`;
+  return `Comprá ${product.name} en ${siteConfig.companyName}. Envíos a todo Argentina.`;
 }
 
 export async function generateMetadata({
@@ -60,7 +64,7 @@ export async function generateMetadata({
   const images =
     product.images.length > 0
       ? product.images.map((image) => ({ url: image.url, alt: image.alt ?? product.name }))
-      : [{ url: "/banner.jpg", width: 1279, height: 929, alt: product.name }];
+      : [{ url: "/banner.jpg", width: 1916, height: 821, alt: product.name }];
 
   return {
     title: product.name,
@@ -151,7 +155,7 @@ export default async function ProductoDetallePage({
       <Breadcrumbs items={breadcrumbItems} />
 
       <WindowPanel
-        title="RETROID"
+        title="PRODUCTO"
         bodyClassName="grid gap-8 p-6 lg:grid-cols-2 lg:gap-12 lg:items-start"
       >
         <ProductGallery images={product.images} productName={product.name} />
@@ -205,7 +209,10 @@ export default async function ProductoDetallePage({
           </div>
 
           {product.description && (
-            <p className="text-pretty leading-relaxed text-muted-foreground">
+            // whitespace-pre-line: respeta los saltos de línea tal como se
+            // cargaron en el admin (listas, párrafos) pero colapsa espacios
+            // repetidos dentro de cada línea.
+            <p className="text-pretty whitespace-pre-line leading-relaxed text-muted-foreground">
               {product.description}
             </p>
           )}

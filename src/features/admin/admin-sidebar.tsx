@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowLeft,
+  BadgeCheck,
   LayoutDashboard,
   ListOrdered,
   LogOut,
@@ -15,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Wordmark } from "@/components/wordmark";
 
 const NAV_ITEMS = [
   { href: "/administracion", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -25,12 +27,15 @@ const NAV_ITEMS = [
   { href: "/administracion/usuarios", label: "Usuarios", icon: Users, exact: false },
   { href: "/administracion/anuncio", label: "Anuncio", icon: Megaphone, exact: false },
   { href: "/administracion/marquee", label: "Barra promo", icon: ListOrdered, exact: false },
+  { href: "/administracion/beneficios", label: "Beneficios", icon: BadgeCheck, exact: false },
 ] as const;
 
 export function AdminSidebar({
+  brandName,
   userEmail,
   signOutAction,
 }: {
+  brandName: string;
   userEmail: string;
   signOutAction: () => Promise<void>;
 }) {
@@ -45,15 +50,10 @@ export function AdminSidebar({
       {/* Sidebar fija — desktop/tablet */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
         <div className="flex h-14 items-center border-b border-sidebar-border px-4">
-          <Link
-            href="/administracion"
-            className="font-mono text-base font-bold tracking-tight text-sidebar-foreground"
-          >
-            RETRO<span className="text-primary">ID</span>
-          </Link>
+          <Wordmark name={brandName} href="/administracion" />
         </div>
         <div className="border-b border-sidebar-border px-4 py-2 font-mono text-[0.65rem] tracking-wide text-muted-foreground uppercase">
-          Retroid Admin v1.0
+          {brandName} Admin v1.0
         </div>
 
         <nav className="flex-1 space-y-1 p-3">

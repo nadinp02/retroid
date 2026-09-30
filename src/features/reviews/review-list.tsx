@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StarRating } from "@/components/star-rating";
+import { siteConfig } from "@/lib/site-config";
 import type { ReviewWithProduct } from "@/types/reviews";
 
 const dateFormatter = new Intl.DateTimeFormat("es-AR", {
@@ -56,7 +57,7 @@ export function ReviewList({ reviews }: { reviews: ReviewWithProduct[] }) {
           {review.adminReply && (
             <div className="mt-4 border-l-2 border-primary bg-primary/5 p-3">
               <p className="font-mono text-xs font-semibold tracking-wide text-primary uppercase">
-                Respuesta de RETROID
+                Respuesta de {siteConfig.companyName}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">{review.adminReply}</p>
             </div>

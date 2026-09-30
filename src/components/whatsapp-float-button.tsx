@@ -9,7 +9,9 @@ import { WhatsAppButton } from "@/components/whatsapp-button";
 // duplicarlo acá solo tapa precio/stock sin sumar nada. En el resto del
 // sitio (home, catálogo) sí aporta como acceso persistente al alcance del
 // pulgar en mobile.
-const PRODUCT_DETAIL_PATTERN = /^\/productos\/[^/]+$/;
+// Exportado: AnnouncementPopup lo usa para saber si esta esquina queda libre
+// y puede bajar hasta el borde.
+export const PRODUCT_DETAIL_PATTERN = /^\/productos\/[^/]+$/;
 
 export function WhatsAppFloatButton({ url }: { url: string }) {
   const pathname = usePathname();
@@ -27,11 +29,12 @@ export function WhatsAppFloatButton({ url }: { url: string }) {
           <>
             <MessageCircle className="size-5 shrink-0" />
             {/* Etiqueta que solo aparece en hover de escritorio (max-w-0 ->
-                max-w-40): no agrega texto permanente que compita con el CTA
+                max-w-56, con margen sobre el ancho real del texto en mono
+                mayúscula para que no se corte): no agrega texto permanente que compita con el CTA
                 del header, pero da contexto la primera vez que alguien
                 repara en el botón. hidden por debajo de sm: en mobile no
                 hay hover que la revele, así que ni se monta expandible. */}
-            <span className="hidden max-w-0 overflow-hidden font-mono text-xs font-medium tracking-wide uppercase whitespace-nowrap opacity-0 transition-[max-width,opacity] duration-200 group-hover:max-w-40 group-hover:opacity-100 sm:inline-block">
+            <span className="hidden max-w-0 overflow-hidden font-mono text-xs font-medium tracking-wide uppercase whitespace-nowrap opacity-0 transition-[max-width,opacity] duration-200 group-hover:max-w-56 group-hover:opacity-100 sm:inline-block">
               Consultar por WhatsApp
             </span>
           </>

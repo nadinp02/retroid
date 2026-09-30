@@ -4,16 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  ImageOff,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  MousePointerClick,
-  Upload,
-  Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ImageOff, ImagePlus, Loader2, MousePointerClick, Star, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FieldError } from "@/components/field-error";
 import {
@@ -25,6 +31,7 @@ import {
   setPrimaryProductImageAction,
 } from "@/actions/products/images";
 import { MAX_IMAGE_BYTES, MAX_IMAGES_PER_PRODUCT } from "@/lib/image-upload-config";
+import { cn } from "@/lib/utils";
 import type { ProductImage } from "@/types/catalog";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -63,6 +70,143 @@ async function uploadOne(productId: string, file: File) {
   }
 }
 
+// Botón de ícono sobre la foto. Fondo oscuro sólido para que se lea encima
+// de cualquier imagen; `title` como tooltip de escritorio y aria-label para
+// lectores de pantalla.
+function TileButton({
+  label,
+  active,
+  className,
+  onPointerDown,
+  ...props
+}: React.ComponentProps<"button"> & { label: string; active?: boolean }) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      {...props}
+      // Después del spread y combinado con el que venga por props (ej. el
+      // de AlertDialogTrigger): sin el stopPropagation, apretar un botón
+      // arrancaría el arrastre de la foto.
+      onPointerDown={(event) => {
+        onPointerDown?.(event);
+        event.stopPropagation();
+      }}
+      className={cn(
+        "flex size-7 items-center justify-center border border-white/15 bg-black/80 text-white transition-colors hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-40",
+        active && "border-primary bg-primary text-primary-foreground hover:text-primary-foreground",
+        className,
+      )}
+    />
+  );
+}
+
+function ImageTile({
+  image,
+  isCover,
+  broken,
+  pending,
+  onBroken,
+  onMakeCover,
+  onToggleHover,
+  onDelete,
+}: {
+  image: ProductImage;
+  isCover: boolean;
+  broken: boolean;
+  pending: boolean;
+  onBroken: () => void;
+  onMakeCover: () => void;
+  onToggleHover: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: image.id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      {...attributes}
+      {...listeners}
+      aria-label={`Foto${isCover ? " de portada" : ""}. Arrastrá para cambiar el orden.`}
+      className={cn(
+        "group relative aspect-square cursor-grab touch-none overflow-hidden border bg-muted active:cursor-grabbing",
+        isCover ? "border-primary" : "border-border",
+        isDragging && "z-10 opacity-80 shadow-xl shadow-black/60",
+      )}
+    >
+      {broken ? (
+        <div className="flex size-full flex-col items-center justify-center gap-1 text-muted-foreground">
+          <ImageOff className="size-6" />
+          <span className="text-[11px]">No se pudo cargar</span>
+        </div>
+      ) : (
+        <Image
+          src={image.url}
+          alt={image.alt ?? ""}
+          fill
+          sizes="(min-width: 768px) 160px, 33vw"
+          draggable={false}
+          className="pointer-events-none object-cover"
+          onError={onBroken}
+        />
+      )}
+
+      {/* Etiqueta de estado arriba a la izquierda: una sola, la más
+          importante (una portada nunca es también la de hover). */}
+      {(isCover || image.isHoverImage) && (
+        <span
+          className={cn(
+            "absolute top-1.5 left-1.5 px-1.5 py-0.5 font-mono text-[10px] leading-none font-semibold tracking-wide uppercase",
+            isCover ? "bg-primary text-primary-foreground" : "bg-white text-black",
+          )}
+        >
+          {isCover ? "Portada" : "Hover"}
+        </span>
+      )}
+
+      {/* Acciones siempre visibles (no solo al pasar el mouse): en tablet o
+          celular no hay hover que las revele. */}
+      <div className="absolute inset-x-1.5 bottom-1.5 flex items-center gap-1">
+        {!isCover && (
+          <>
+            <TileButton label="Usar como portada" disabled={pending} onClick={onMakeCover}>
+              <Star className="size-3.5" />
+            </TileButton>
+            <TileButton
+              label={image.isHoverImage ? "Quitar de hover" : "Mostrar al pasar el mouse"}
+              active={image.isHoverImage}
+              disabled={pending}
+              onClick={onToggleHover}
+            >
+              <MousePointerClick className="size-3.5" />
+            </TileButton>
+          </>
+        )}
+        <ConfirmDialog
+          trigger={
+            <TileButton
+              label="Eliminar foto"
+              disabled={pending}
+              className="ml-auto hover:border-destructive hover:text-destructive"
+            >
+              <Trash2 className="size-3.5" />
+            </TileButton>
+          }
+          title="Eliminar foto"
+          description="¿Eliminar esta foto? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onConfirm={onDelete}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ImageManager({
   productId,
   images,
@@ -86,23 +230,25 @@ export function ImageManager({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDraggingFiles, setIsDraggingFiles] = useState(false);
 
-  // Si se borra/reordena y el índice actual queda fuera de rango, se ajusta
-  // al último válido en vez de mostrar un slot vacío.
+  // Orden local para reflejar el arrastre al instante, sin esperar el viaje
+  // al server — se resincroniza cuando llegan imágenes nuevas del padre.
+  const [ordered, setOrdered] = useState(images);
   useEffect(() => {
-    if (currentIndex > images.length - 1) {
-      setCurrentIndex(Math.max(0, images.length - 1));
-    }
-  }, [images.length, currentIndex]);
+    setOrdered(images);
+  }, [images]);
 
-  const current = images[currentIndex];
+  const sensors = useSensors(
+    // distance: sin esto cualquier click sobre la foto arrancaría un drag.
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
-  async function handleFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    event.target.value = "";
+  const canUpload = !uploadProgress && ordered.length < MAX_IMAGES_PER_PRODUCT;
+
+  async function uploadFiles(files: File[]) {
     if (files.length === 0) return;
-
     setError(null);
 
     const invalidFormat = files.find((file) => !ALLOWED_MIME_TYPES.includes(file.type));
@@ -115,9 +261,9 @@ export function ImageManager({
       setError(`"${tooLarge.name}" supera el máximo de ${MAX_IMAGE_BYTES / (1024 * 1024)}MB.`);
       return;
     }
-    if (images.length + files.length > MAX_IMAGES_PER_PRODUCT) {
+    if (ordered.length + files.length > MAX_IMAGES_PER_PRODUCT) {
       setError(
-        `Máximo ${MAX_IMAGES_PER_PRODUCT} imágenes por producto (ya hay ${images.length}, intentaste sumar ${files.length}).`,
+        `Máximo ${MAX_IMAGES_PER_PRODUCT} fotos por producto (ya hay ${ordered.length}, intentaste sumar ${files.length}).`,
       );
       return;
     }
@@ -133,238 +279,153 @@ export function ImageManager({
       }
       notifyMutated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado subiendo las imágenes.");
+      setError(err instanceof Error ? err.message : "Error inesperado subiendo las fotos.");
     } finally {
       setUploadProgress(null);
     }
   }
 
-  async function handleDelete(imageId: string, publicId: string) {
+  // Soltar archivos desde el escritorio sobre el panel. Solo reacciona a
+  // arrastres de archivos (dataTransfer.types incluye "Files"), no al
+  // reordenamiento de fotos, que es de dnd-kit y no usa la API nativa.
+  function handleDragOver(event: React.DragEvent) {
+    if (!event.dataTransfer.types.includes("Files")) return;
+    event.preventDefault();
+    if (canUpload) setIsDraggingFiles(true);
+  }
+
+  function handleDrop(event: React.DragEvent) {
+    if (!event.dataTransfer.types.includes("Files")) return;
+    event.preventDefault();
+    setIsDraggingFiles(false);
+    if (!canUpload) return;
+    void uploadFiles(Array.from(event.dataTransfer.files));
+  }
+
+  async function runAction(fn: () => Promise<{ ok: true } | { ok: false; error: string }>) {
     setPending(true);
     setError(null);
     try {
-      const result = await deleteProductImageAction(productId, imageId, publicId);
+      const result = await fn();
       if (!result.ok) {
         setError(result.error);
-        return;
+        return false;
       }
       notifyMutated();
+      return true;
     } finally {
       setPending(false);
     }
   }
 
-  async function handleMove(direction: -1 | 1) {
-    const target = currentIndex + direction;
-    if (target < 0 || target >= images.length) return;
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    const orderedIds = images.map((image) => image.id);
-    [orderedIds[currentIndex], orderedIds[target]] = [orderedIds[target], orderedIds[currentIndex]];
+    const oldIndex = ordered.findIndex((image) => image.id === active.id);
+    const newIndex = ordered.findIndex((image) => image.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
 
-    setPending(true);
-    setError(null);
-    try {
-      const result = await reorderProductImagesAction(productId, orderedIds);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      setCurrentIndex(target);
-      notifyMutated();
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function handleSetPrimary(imageId: string) {
-    setPending(true);
-    setError(null);
-    try {
-      const result = await setPrimaryProductImageAction(productId, imageId);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      setCurrentIndex(0);
-      notifyMutated();
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function handleToggleHover(imageId: string) {
-    setPending(true);
-    setError(null);
-    try {
-      const result = await setHoverProductImageAction(productId, imageId);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      notifyMutated();
-    } finally {
-      setPending(false);
-    }
+    const reordered = arrayMove(ordered, oldIndex, newIndex);
+    setOrdered(reordered);
+    const ok = await runAction(() =>
+      reorderProductImagesAction(
+        productId,
+        reordered.map((image) => image.id),
+      ),
+    );
+    if (!ok) setOrdered(images);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="gap-1.5"
-          disabled={!!uploadProgress || images.length >= MAX_IMAGES_PER_PRODUCT}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload className="size-3.5" />
-          {uploadProgress
-            ? `Subiendo ${uploadProgress.done + 1} de ${uploadProgress.total}...`
-            : "Subir imágenes"}
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          {images.length} / {MAX_IMAGES_PER_PRODUCT}
-        </span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={handleFilesChange}
-        />
-      </div>
+    <div
+      className="space-y-3"
+      onDragOver={handleDragOver}
+      onDragLeave={(event) => {
+        // Solo al salir del panel entero, no al pasar entre hijos.
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          setIsDraggingFiles(false);
+        }
+      }}
+      onDrop={handleDrop}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
+          event.target.value = "";
+          void uploadFiles(files);
+        }}
+      />
+
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <SortableContext items={ordered.map((image) => image.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-3 gap-2">
+            {ordered.map((image, index) => (
+              <ImageTile
+                key={image.id}
+                image={image}
+                isCover={index === 0}
+                broken={brokenIds.has(image.id)}
+                pending={pending}
+                onBroken={() => setBrokenIds((prev) => new Set(prev).add(image.id))}
+                onMakeCover={() =>
+                  runAction(() => setPrimaryProductImageAction(productId, image.id))
+                }
+                onToggleHover={() =>
+                  runAction(() => setHoverProductImageAction(productId, image.id))
+                }
+                onDelete={() =>
+                  runAction(() => deleteProductImageAction(productId, image.id, image.publicId))
+                }
+              />
+            ))}
+
+            {/* Casillero para agregar: siempre al final de la grilla, así
+                subir fotos está donde el ojo ya está mirando. También recibe
+                archivos arrastrados (resaltado mientras se arrastra). */}
+            {ordered.length < MAX_IMAGES_PER_PRODUCT && (
+              <button
+                type="button"
+                disabled={!canUpload}
+                onClick={() => fileInputRef.current?.click()}
+                className={cn(
+                  "flex aspect-square flex-col items-center justify-center gap-1.5 border border-dashed p-2 text-center text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-wait",
+                  isDraggingFiles ? "border-primary bg-primary/10 text-primary" : "border-border",
+                  ordered.length === 0 && "col-span-3 aspect-auto py-10",
+                )}
+              >
+                {uploadProgress ? (
+                  <>
+                    <Loader2 className="size-5 animate-spin" />
+                    <span className="text-xs">
+                      Subiendo {uploadProgress.done + 1} de {uploadProgress.total}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="size-5" />
+                    <span className="font-mono text-[11px] font-medium tracking-wide uppercase">
+                      Agregar fotos
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <FieldError message={error ?? undefined} />
 
-      {images.length === 0 ? (
-        <p className="border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Todavía no hay imágenes. Subí al menos una para que el producto se vea en el catálogo.
-          Podés seleccionar varias a la vez.
+      {ordered.length > 0 && (
+        <p className="text-right font-mono text-xs text-muted-foreground">
+          {ordered.length}/{MAX_IMAGES_PER_PRODUCT}
         </p>
-      ) : (
-        current && (
-          <div className="mx-auto max-w-md space-y-3">
-            <div className="relative aspect-square overflow-hidden rounded-lg border border-border bg-muted">
-              {brokenIds.has(current.id) ? (
-                <div className="flex size-full flex-col items-center justify-center gap-1.5 text-muted-foreground">
-                  <ImageOff className="size-8" />
-                  <span className="text-center text-xs">No se pudo cargar</span>
-                </div>
-              ) : (
-                <Image
-                  key={current.id}
-                  src={current.url}
-                  alt={current.alt ?? ""}
-                  fill
-                  sizes="400px"
-                  className="animate-in fade-in object-contain duration-150"
-                  onError={() => setBrokenIds((prev) => new Set(prev).add(current.id))}
-                />
-              )}
-
-              {currentIndex === 0 && <Badge className="absolute top-2 left-2">Principal</Badge>}
-              {current.isHoverImage && (
-                <Badge variant="accent" className="absolute top-2 right-2">
-                  Hover
-                </Badge>
-              )}
-
-              {images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentIndex((i) => (i - 1 + images.length) % images.length)}
-                    aria-label="Imagen anterior"
-                    className="absolute top-1/2 left-2 flex size-8 -translate-y-1/2 items-center justify-center border border-border bg-[#0d0d0f]/80 text-foreground transition-colors hover:border-accent"
-                  >
-                    <ChevronLeft className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentIndex((i) => (i + 1) % images.length)}
-                    aria-label="Imagen siguiente"
-                    className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center border border-border bg-[#0d0d0f]/80 text-foreground transition-colors hover:border-accent"
-                  >
-                    <ChevronRight className="size-4" />
-                  </button>
-                </>
-              )}
-            </div>
-
-            <p className="text-center font-mono text-xs text-muted-foreground">
-              Imagen {currentIndex + 1} de {images.length}
-            </p>
-
-            <div className="flex items-center justify-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                disabled={pending || currentIndex === 0}
-                onClick={() => handleMove(-1)}
-                aria-label="Mover antes en el orden"
-                title="Mover antes en el orden"
-              >
-                <ChevronLeft className="size-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                disabled={pending || currentIndex === images.length - 1}
-                onClick={() => handleMove(1)}
-                aria-label="Mover después en el orden"
-                title="Mover después en el orden"
-              >
-                <ChevronRight className="size-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                disabled={pending || currentIndex === 0}
-                onClick={() => handleSetPrimary(current.id)}
-                aria-label="Marcar como principal"
-                title="Marcar como principal"
-              >
-                <Star className="size-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant={current.isHoverImage ? "accent" : "outline"}
-                size="icon-sm"
-                disabled={pending || currentIndex === 0}
-                onClick={() => handleToggleHover(current.id)}
-                aria-label={
-                  current.isHoverImage
-                    ? "Quitar como imagen de hover"
-                    : "Marcar como imagen de hover (se muestra en la card al pasar el mouse)"
-                }
-                title={current.isHoverImage ? "Quitar como imagen de hover" : "Marcar como hover"}
-              >
-                <MousePointerClick className="size-3.5" />
-              </Button>
-              <ConfirmDialog
-                trigger={
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon-sm"
-                    disabled={pending}
-                    aria-label="Eliminar imagen"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                }
-                title="Eliminar imagen"
-                description="¿Eliminar esta imagen? Esta acción no se puede deshacer."
-                confirmLabel="Eliminar"
-                onConfirm={() => handleDelete(current.id, current.publicId)}
-              />
-            </div>
-          </div>
-        )
       )}
     </div>
   );

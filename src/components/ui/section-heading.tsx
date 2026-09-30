@@ -8,12 +8,12 @@ const SIZES = {
 } as const;
 
 // "mono": estilo terminal/DedSec original (todo el sitio hoy).
-// "display": serif hero (font-display / Playfair) — reservado para
-// títulos importantes de la Home, no cambia ningún uso existente porque
-// el default sigue siendo "mono".
+// "display": bloque itálico estilo logo (font-display / Archivo) —
+// reservado para títulos importantes de la Home, no cambia ningún uso
+// existente porque el default sigue siendo "mono".
 const FONT_VARIANTS = {
   mono: "font-mono uppercase",
-  display: "font-display font-black normal-case",
+  display: "font-display font-black italic uppercase font-stretch-semi-expanded",
 } as const;
 
 export function SectionHeading({

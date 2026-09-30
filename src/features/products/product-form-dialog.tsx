@@ -85,7 +85,7 @@ export function ProductFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-3xl">
+      <DialogPopup className="max-w-5xl">
         <DialogTitle>{editingId ? "Editar producto" : "Nuevo producto"}</DialogTitle>
         <div className="grid gap-6 p-5 md:grid-cols-2 md:items-start">
           <ProductFormFields

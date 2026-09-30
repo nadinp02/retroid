@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/submit-button";
 import { FieldError } from "@/components/field-error";
+import { siteConfig } from "@/lib/site-config";
 
 export default async function LoginPage({
   searchParams,
@@ -46,7 +47,7 @@ export default async function LoginPage({
         <WindowPanel title="LOGIN" className="w-full">
           <div className="space-y-1.5 border-b border-border p-5">
             <p className="font-mono text-lg font-bold tracking-tight">
-              <span className="text-primary">RETROID</span>{" "}
+              <span className="text-primary">{siteConfig.companyName}</span>{" "}
               <span className="text-muted-foreground">— Panel administrativo</span>
             </p>
             <p className="text-sm text-muted-foreground">
